@@ -1,11 +1,15 @@
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
+const { readResults } = require('./evaluate');
+const { buildComparison } = require('./comparison');
 const {
-  appendResult,
-  readResults,
-  runTaskTests
-} = require('./evaluate');
+  getAttemptContext,
+  recordAttemptEvaluation,
+  resetBenchmark,
+  runAndRecordAttempt
+} = require('./benchmark');
+const { MAX_ATTEMPTS, TASK_PATTERN, TOOLS } = require('./benchmark-config');
 
 const ROOT = path.join(__dirname, '..');
 const TASKS_DIRECTORY = path.join(ROOT, 'tasks');
@@ -13,12 +17,6 @@ const PUBLIC_DIRECTORY = path.join(__dirname, 'public');
 const HOST = process.env.HOST || '127.0.0.1';
 const PORT = Number(process.env.PORT || 3000);
 const MAX_BODY_BYTES = 1024 * 1024;
-const TASK_PATTERN = /^T(?:0[1-9]|1[0-9]|20)$/;
-const TOOL_FILES = {
-  'GitHub Copilot': 'copilot',
-  Cursor: 'cursor',
-  'Qwen Coder (Ollama)': 'qwen'
-};
 const STATIC_FILES = {
   '/': ['index.html', 'text/html; charset=utf-8'],
   '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
@@ -68,19 +66,11 @@ function getTaskDirectory(task) {
 }
 
 function getToolFile(tool) {
-  if (!TOOL_FILES[tool]) {
+  const toolConfig = TOOLS[tool];
+  if (!toolConfig) {
     throw Object.assign(new Error('Outil inconnu.'), { statusCode: 400 });
   }
-  return TOOL_FILES[tool];
-}
-
-function getFailures(report) {
-  return report.testResults.flatMap((suite) => suite.assertionResults
-    .filter((assertion) => assertion.status === 'failed')
-    .map((assertion) => ({
-      name: assertion.fullName,
-      message: assertion.failureMessages.join('\n')
-    })));
+  return toolConfig.file;
 }
 
 function getTaskList() {
@@ -94,9 +84,9 @@ function getTaskList() {
         id: entry.name,
         title: title ? title[0].replace(/^#\s+/, '') : entry.name,
         submissions: Object.fromEntries(
-          Object.values(TOOL_FILES).map((tool) => [
-            tool,
-            fs.existsSync(path.join(taskDirectory, 'submissions', `${tool}.js`))
+          Object.entries(TOOLS).map(([label, config]) => [
+            label,
+            fs.existsSync(path.join(taskDirectory, 'submissions', `${config.file}.js`))
           ])
         )
       };
@@ -112,6 +102,29 @@ async function handleApi(request, response, url) {
 
   if (request.method === 'GET' && url.pathname === '/api/results') {
     sendJson(response, 200, readResults());
+    return;
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/comparison') {
+    sendJson(response, 200, buildComparison(getTaskList(), readResults()));
+    return;
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/attempts') {
+    const task = url.searchParams.get('task');
+    const tool = url.searchParams.get('tool');
+    getTaskDirectory(task);
+    getToolFile(tool);
+    sendJson(response, 200, getAttemptContext(ROOT, task, tool));
+    return;
+  }
+
+  if (request.method === 'DELETE' && url.pathname === '/api/benchmark') {
+    const body = await readJsonBody(request);
+    getTaskDirectory(body.task);
+    getToolFile(body.tool);
+    const reset = resetBenchmark(ROOT, body.task, body.tool);
+    sendJson(response, 200, reset);
     return;
   }
 
@@ -145,17 +158,24 @@ async function handleApi(request, response, url) {
     const body = await readJsonBody(request);
     getTaskDirectory(body.task);
     getToolFile(body.tool);
-    const result = runTaskTests(body.task, body.tool);
+    const result = runAndRecordAttempt({
+      root: ROOT,
+      task: body.task,
+      tool: body.tool,
+      code: body.code,
+      modelVersion: body.modelVersion
+    });
     sendJson(response, 200, {
-      passed: result.report.numPassedTests,
-      failed: result.report.numFailedTests,
-      skipped: result.report.numPendingTests,
-      submissionExists: result.submissionExists,
-      failures: getFailures(result.report),
-      success: result.submissionExists &&
-        result.report.numPendingTests === 0 &&
-        result.exitCode === 0 &&
-        result.report.numFailedTests === 0
+      attempt: result.attempt,
+      passed: result.attempt.testSummary.passed,
+      total: result.attempt.testSummary.total,
+      failed: result.attempt.testSummary.failed,
+      skipped: result.attempt.testSummary.skipped,
+      failures: result.failures,
+      success: result.attempt.status === 'Réussi',
+      nextPrompt: result.attempt.retryPrompt,
+      canRetry: result.attempt.status !== 'Réussi' &&
+        result.attempt.attemptNumber < MAX_ATTEMPTS
     });
     return;
   }
@@ -163,49 +183,52 @@ async function handleApi(request, response, url) {
   if (request.method === 'POST' && url.pathname === '/api/evaluate') {
     const body = await readJsonBody(request);
     getTaskDirectory(body.task);
-    if (!TOOL_FILES[body.tool]) {
-      throw Object.assign(new Error('Outil inconnu.'), { statusCode: 400 });
-    }
-    const numericFields = ['quality', 'security', 'trials', 'minutes'];
+    getToolFile(body.tool);
+    const scoreFields = [
+      'correctness',
+      'quality',
+      'security',
+      'timeIterations',
+      'hallucinations'
+    ];
     const isNumber = (value) => (
+      (typeof value === 'number' && Number.isFinite(value)) ||
+      (typeof value === 'string' && /^\d+$/.test(value))
+    );
+    const isMinutes = (value) => (
       (typeof value === 'number' && Number.isFinite(value)) ||
       (typeof value === 'string' && /^\d+(?:\.\d+)?$/.test(value))
     );
     if (
-      numericFields.some((field) => !isNumber(body[field])) ||
-      Number(body.quality) < 0 || Number(body.quality) > 5 ||
-      Number(body.security) < 0 || Number(body.security) > 5 ||
-      !Number.isInteger(Number(body.trials)) || Number(body.trials) < 1 || Number(body.trials) > 3 ||
+      !Number.isInteger(body.attemptNumber) ||
+      scoreFields.some((field) => !isNumber(body[field])) ||
+      scoreFields.some((field) => Number(body[field]) < 0 || Number(body[field]) > 5) ||
+      !isMinutes(body.minutes) ||
       !Number.isFinite(Number(body.minutes)) || Number(body.minutes) < 0 ||
       typeof body.remarks !== 'string'
     ) {
-      throw Object.assign(new Error('Vérifiez les notes, le nombre d’essais et le temps saisis.'), {
+      throw Object.assign(new Error('Vérifiez les cinq notes (/5), le temps et les remarques.'), {
         statusCode: 400
       });
     }
-    const result = runTaskTests(body.task, body.tool);
-    appendResult(body.task, {
-      passedTests: result.report.numPassedTests,
-      skippedSuites: result.report.numPendingTestSuites,
-      submissionExists: result.submissionExists
-    }, {
+    const attempt = recordAttemptEvaluation({
+      root: ROOT,
+      task: body.task,
       tool: body.tool,
-      quality: String(body.quality),
-      security: String(body.security),
-      trials: String(body.trials),
-      minutes: String(body.minutes),
-      remarks: body.remarks.trim()
+      attemptNumber: body.attemptNumber,
+      evaluation: {
+        correctness: Number(body.correctness),
+        quality: Number(body.quality),
+        security: Number(body.security),
+        timeIterations: Number(body.timeIterations),
+        hallucinations: Number(body.hallucinations),
+        minutes: Number(body.minutes),
+        remarks: body.remarks
+      }
     });
     sendJson(response, 200, {
       result: readResults().at(-1),
-      passed: result.report.numPassedTests,
-      failed: result.report.numFailedTests,
-      skipped: result.report.numPendingTests,
-      failures: getFailures(result.report),
-      success: result.submissionExists &&
-        result.report.numPendingTests === 0 &&
-        result.exitCode === 0 &&
-        result.report.numFailedTests === 0
+      attempt
     });
     return;
   }

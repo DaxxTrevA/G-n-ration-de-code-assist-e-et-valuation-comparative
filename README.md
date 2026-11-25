@@ -17,27 +17,21 @@ La répartition prévue est :
 
 | Responsable | Outil testé |
 | --- | --- |
-| Personne A | GitHub Copilot |
-| Personne B | Cursor avec le modèle Grok 4.7 |
-| Personne C | Qwen Coder avec Ollama |
+| Personne A | Cursor avec Grok 4.7 |
+| Personne B | GitHub Copilot |
+| Personne C | Cline avec Qwen2.5-Coder 7B dans Ollama |
 
 Chaque personne teste les 20 exercices avec son outil. Le tableau final contient
-donc jusqu'à trois lignes par tâche, une par outil. Pour limiter les différences
-dues à la manière de tester, appliquez les mêmes règles : le même énoncé, au
-maximum trois essais et aucune correction manuelle du code généré entre les
-essais. Collez le code brut de l'assistant dans l'interface et notez le nombre
-d'essais réellement effectués.
+jusqu'à neuf lignes par tâche si chaque outil a besoin de ses trois essais.
+À la première tentative, envoyez l'énoncé tel quel; après un échec, envoyez
+uniquement l'erreur exacte des tests. Ne modifiez pas manuellement le code et
+arrêtez-vous à la première réussite ou après trois essais.
 
-Pour ce benchmark, le modèle utilisé dans Cursor est **Grok 4.7**. Notez
-aussi le nom exact du modèle Copilot sélectionné et la variante Qwen installée
-avec Ollama dans les remarques de chaque évaluation, afin que les résultats
-restent reproductibles.
-
-La fiabilité se juge sur des observations : tests réussis, nombre d'essais,
-qualité, sécurité et remarques (par exemple une bibliothèque annoncée qui
-n'existe pas). La qualité, la sécurité, le temps et les essais sont consignés
-par l'équipe; l'application n'invente pas ces mesures. Le barème commun détaillé
-est à valider par l'équipe avant le benchmark.
+La fiabilité se juge sur les cinq critères de la
+[grille d'évaluation](./docs/grille-evaluation.md) : justesse, qualité,
+sécurité, temps et itérations, hallucinations. Les tests, le temps et le nombre
+de tentatives sont consignés séparément des notes. Consultez le
+[protocole commun](./docs/protocole-benchmark.md) avant de tester.
 
 Les exemples chiffrés de comparaison doivent provenir des résultats réellement
 collectés : aucun résultat hypothétique ne doit être présenté comme une mesure.
@@ -52,15 +46,22 @@ les évaluations humaines. Les résultats s'ajoutent à `results/results.csv`.
 2. À la racine du dépôt, exécutez `npm ci`.
 3. Lancez `npm start`.
 4. Ouvrez <http://localhost:3000>.
-5. Sélectionnez une tâche et un assistant, collez la réponse générée dans
-   l'éditeur, puis cliquez **Enregistrer et lancer les tests**.
-6. Après avoir vérifié le code et vos notes, complétez la qualité, la sécurité,
-   les essais et le temps, puis enregistrez l'évaluation.
+5. Sélectionnez une tâche et votre outil attribué. Copiez le prompt affiché et
+   envoyez-le tel quel à l'assistant.
+6. Collez sa réponse brute, indiquez le modèle exact si demandé, puis cliquez
+   **Enregistrer et lancer les tests**.
+7. Saisissez les notes de la grille et le temps écoulé après chaque tentative.
+   En cas d'échec, copiez le message d'erreur affiché pour la tentative suivante.
+8. Ouvrez **Comparaison** pour voir les 20 tâches. Le pourcentage de chaque
+   outil est la moyenne de ses cinq notes lors de sa dernière tentative évaluée.
+   Le meilleur outil apparaît seulement quand les trois ont des résultats.
+   **Imprimer en A4** prépare le tableau pour l'impression.
 
 Le code collé sera exécuté sur votre machine : relisez-le avant de lancer les
-tests. Les soumissions sont stockées dans `tasks/Txx/submissions/` avec un
-fichier séparé par outil (`copilot.js`, `cursor.js`, `qwen.js`). Gardez les
-mêmes consignes et le même protocole pour chaque assistant.
+tests. Les soumissions actives sont stockées dans `tasks/Txx/submissions/`;
+chaque réponse de chaque tentative est aussi archivée avec son prompt et ses
+résultats sous `results/<outil>/Txx/`. L'application interdit une quatrième
+tentative ou une nouvelle tentative après réussite.
 
 ## Tests
 
@@ -70,10 +71,20 @@ npm run test:T01
 npm run test:T02
 ```
 
-`npm run test:T01` demande quel assistant tester puis exécute les tests sur sa
-soumission enregistrée. Dans l'interface, le code propre à l'assistant est
-exécuté au clic sur **Enregistrer et lancer les tests**. Sans soumission, le
-script indique où la saisir au lieu d'afficher un faux résultat réussi.
+`npm run test:T01` demande quel outil tester puis exécute les tests sur sa
+soumission enregistrée. L'interface est le parcours recommandé pour consigner
+chaque essai, son prompt, sa réponse, ses notes et son résultat. Sans soumission,
+le script l'indique au lieu d'afficher un faux résultat réussi.
+
+Pour lancer la série des 20 tâches pour l'outil attribué dans le conteneur :
+
+```sh
+docker compose build p27-tests
+docker compose run --rm -e P27_TOOL=cursor p27-tests npm run test:all
+```
+
+Remplacez `cursor` par `copilot` ou `cline-qwen2.5-coder-7b` selon votre outil.
+Les tâches sans code sont indiquées comme non testées, jamais comme réussies.
 
 ## Docker
 
@@ -108,7 +119,9 @@ nombre d'essais et temps ne sont jamais déduits automatiquement.
 
 - `tasks/T01` à `tasks/T20` : énoncé, tests Jest et répertoire des soumissions.
 - `scripts/evaluate.js` : tests et écriture des évaluations CSV.
+- `scripts/benchmark.js` : suivi des essais, prompts et réponses archivés.
 - `scripts/server.js` et `scripts/public/` : interface web et API locales.
+- `docs/protocole-benchmark.md` et `docs/grille-evaluation.md` : consignes communes.
 - `tests/` : utilitaires de chargement des soumissions et tests de l'outil.
 - `results/results.csv` : tableau des évaluations observées, vide au départ.
 - `.github/workflows/tests.yml` : CI exécutant Jest sur push et pull request.
@@ -123,8 +136,8 @@ travail des assistants comparés.
 ## CI et badge GitHub
 
 Le workflow `.github/workflows/tests.yml` installe les dépendances avec
-`npm ci`, puis exécute `npm test` à chaque push et pull request. Après avoir
-Le badge ci-dessus suit le statut du workflow du dépôt.
+`npm ci`, puis exécute `npm test` à chaque push et pull request. Le badge
+ci-dessus suit le statut du workflow du dépôt.
 
 ## Contribution
 

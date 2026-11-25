@@ -3,15 +3,10 @@ const path = require('node:path');
 const readline = require('node:readline/promises');
 const { stdin, stdout } = require('node:process');
 const { runTaskTests } = require('./evaluate');
+const { TASK_PATTERN, TOOLS } = require('./benchmark-config');
 
 const ROOT = path.join(__dirname, '..');
-const TASK_PATTERN = /^T(?:0[1-9]|1[0-9]|20)$/;
-const TOOLS = ['GitHub Copilot', 'Cursor', 'Qwen Coder (Ollama)'];
-const TOOL_FILES = {
-  'GitHub Copilot': 'copilot',
-  Cursor: 'cursor',
-  'Qwen Coder (Ollama)': 'qwen'
-};
+const TOOL_NAMES = Object.keys(TOOLS);
 
 async function main() {
   const task = process.argv[2];
@@ -22,16 +17,16 @@ async function main() {
   const rl = readline.createInterface({ input: stdin, output: stdout });
   let tool;
   try {
-    tool = await rl.question(`Quel outil tester ? ${TOOLS.join(' / ')} : `);
+    tool = await rl.question(`Quel outil tester ? ${TOOL_NAMES.join(' / ')} : `);
   } finally {
     rl.close();
   }
   tool = tool.trim();
-  if (!TOOL_FILES[tool]) {
-    throw new Error(`Outil inconnu. Choisissez parmi : ${TOOLS.join(', ')}.`);
+  if (!TOOLS[tool]) {
+    throw new Error(`Outil inconnu. Choisissez parmi : ${TOOL_NAMES.join(', ')}.`);
   }
 
-  const submissionPath = path.join(ROOT, 'tasks', task, 'submissions', `${TOOL_FILES[tool]}.js`);
+  const submissionPath = path.join(ROOT, 'tasks', task, 'submissions', `${TOOLS[tool].file}.js`);
   if (!fs.existsSync(submissionPath)) {
     stdout.write(`Aucune soumission ${tool} pour ${task}.\n`);
     stdout.write('Collez d’abord le code dans l’interface avec cet outil sélectionné.\n');

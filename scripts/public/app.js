@@ -1,13 +1,17 @@
 const tools = {
-  'GitHub Copilot': 'copilot',
-  Cursor: 'cursor',
-  'Qwen Coder (Ollama)': 'qwen'
+  'Cursor (Grok 4.7)': { file: 'cursor', model: 'Grok 4.7' },
+  'GitHub Copilot': { file: 'copilot', model: '' },
+  'Cline (Qwen2.5-Coder 7B / Ollama)': {
+    file: 'cline-qwen2.5-coder-7b',
+    model: 'Qwen2.5-Coder 7B (Ollama)'
+  }
 };
 
 const state = {
   tasks: [],
   selectedTask: null,
-  result: null
+  result: null,
+  attemptContext: null
 };
 
 const elements = {
@@ -18,13 +22,29 @@ const elements = {
   taskStatus: document.querySelector('#task-status'),
   taskDescription: document.querySelector('#task-description'),
   tool: document.querySelector('#tool'),
+  modelVersion: document.querySelector('#model-version'),
   code: document.querySelector('#code'),
+  promptTitle: document.querySelector('#prompt-title'),
+  promptText: document.querySelector('#prompt-text'),
+  promptHint: document.querySelector('#prompt-hint'),
+  copyPrompt: document.querySelector('#copy-prompt'),
+  attemptCount: document.querySelector('#attempt-count'),
   editorFile: document.querySelector('#editor-file'),
   saveRun: document.querySelector('#save-run'),
   reloadCode: document.querySelector('#reload-code'),
+  resetBenchmark: document.querySelector('#reset-benchmark'),
+  resetStatus: document.querySelector('#reset-status'),
   testResult: document.querySelector('#test-result'),
+  retryPrompt: document.querySelector('#retry-prompt'),
+  retryText: document.querySelector('#retry-text'),
+  copyRetry: document.querySelector('#copy-retry'),
   evaluationForm: document.querySelector('#evaluation-form'),
-  resultsBody: document.querySelector('#results-body')
+  resultsBody: document.querySelector('#results-body'),
+  evaluationView: document.querySelector('#evaluation-view'),
+  comparisonView: document.querySelector('#comparison-view'),
+  navEvaluation: document.querySelector('#nav-evaluation'),
+  navComparison: document.querySelector('#nav-comparison'),
+  comparisonBody: document.querySelector('#comparison-body')
 };
 
 async function api(url, options = {}) {
@@ -57,8 +77,8 @@ function renderTaskList() {
 
     const dots = document.createElement('span');
     dots.className = 'tool-dots';
-    dots.setAttribute('aria-label', 'Soumissions enregistrées');
-    for (const tool of Object.values(tools)) {
+    dots.setAttribute('aria-label', 'Code enregistré pour chaque outil');
+    for (const tool of Object.keys(tools)) {
       const dot = document.createElement('i');
       dot.className = task.submissions[tool] ? 'ready' : '';
       dots.append(dot);
@@ -67,7 +87,7 @@ function renderTaskList() {
     button.addEventListener('click', () => selectTask(task.id));
     elements.taskList.append(button);
   }
-  elements.taskCount.textContent = `${state.tasks.length} tâches`;
+  elements.taskCount.textContent = `${state.tasks.length} exercices`;
 }
 
 function renderMarkdown(markdown) {
@@ -97,11 +117,15 @@ function renderMarkdown(markdown) {
 async function selectTask(taskId) {
   state.selectedTask = taskId;
   state.result = null;
+  state.attemptContext = null;
+  elements.resetStatus.hidden = true;
   elements.testResult.hidden = true;
   elements.evaluationForm.hidden = true;
+  elements.retryPrompt.hidden = true;
   renderTaskList();
   await loadTask(taskId);
   await loadSubmission();
+  await loadAttemptContext();
 }
 
 async function loadTask(taskId) {
@@ -109,8 +133,8 @@ async function loadTask(taskId) {
   elements.taskKicker.textContent = `EXERCICE ${taskId}`;
   elements.taskTitle.textContent = task.title;
   elements.taskStatus.textContent = Object.values(task.submissions).some(Boolean)
-    ? 'Soumission prête'
-    : 'À compléter';
+    ? 'Code enregistré'
+    : 'Pas encore testé';
   elements.taskStatus.classList.toggle('ready', Object.values(task.submissions).some(Boolean));
   const response = await fetch(`/tasks/${taskId}/README.md`);
   if (!response.ok) throw new Error(`Énoncé introuvable pour ${taskId}.`);
@@ -123,7 +147,69 @@ async function loadSubmission() {
     `/api/submission?task=${encodeURIComponent(state.selectedTask)}&tool=${encodeURIComponent(tool)}`
   );
   elements.code.value = submission.code;
-  elements.editorFile.textContent = `${tools[tool]}.js`;
+  elements.editorFile.textContent = `${tools[tool].file}.js`;
+  elements.modelVersion.value = tools[tool].model;
+  elements.modelVersion.readOnly = Boolean(tools[tool].model);
+  elements.modelVersion.required = true;
+  elements.modelVersion.placeholder = tools[tool].model
+    ? 'Modèle fixé par le protocole'
+    : 'Sélectionnez le modèle exact dans Copilot';
+}
+
+async function loadAttemptContext() {
+  const tool = elements.tool.value;
+  const context = await api(
+    `/api/attempts?task=${encodeURIComponent(state.selectedTask)}&tool=${encodeURIComponent(tool)}`
+  );
+  state.attemptContext = context;
+  const lastAttempt = context.attempts.at(-1);
+  const currentAttempt = context.attempts.length + (context.isComplete ? 0 : 1);
+  elements.attemptCount.textContent = context.isComplete
+    ? `Exercice terminé · ${context.attempts.length} essai(s)`
+    : `Essai ${currentAttempt} sur 3`;
+  elements.promptTitle.textContent = currentAttempt > 1
+    ? `Erreur à transmettre pour l’essai ${currentAttempt}`
+    : 'Consigne de l’exercice';
+  elements.promptText.textContent = context.nextPrompt ||
+    (lastAttempt && lastAttempt.prompt) ||
+    'Cette tâche est terminée pour cet outil.';
+  elements.promptHint.textContent = currentAttempt > 1
+    ? 'Copiez ce message sans ajouter d’explication.'
+    : 'Envoyez cette consigne telle quelle à l’outil choisi.';
+  elements.copyPrompt.disabled = !context.nextPrompt;
+  elements.saveRun.disabled = context.isComplete;
+  elements.saveRun.innerHTML = context.isComplete
+    ? 'Exercice terminé'
+    : 'Lancer les tests <span aria-hidden="true">→</span>';
+
+  if (lastAttempt && !lastAttempt.evaluation) {
+    elements.code.value = lastAttempt.response;
+    showTestResult({
+      attempt: lastAttempt,
+      passed: lastAttempt.testSummary.passed,
+      total: lastAttempt.testSummary.total,
+      failed: lastAttempt.testSummary.failed,
+      skipped: lastAttempt.testSummary.skipped,
+      failures: lastAttempt.failures || [],
+      nextPrompt: lastAttempt.retryPrompt,
+      canRetry: lastAttempt.status !== 'Réussi' &&
+        lastAttempt.attemptNumber < 3,
+      success: lastAttempt.status === 'Réussi'
+    });
+  } else {
+    elements.testResult.hidden = true;
+    elements.evaluationForm.hidden = true;
+    elements.retryPrompt.hidden = !context.nextPrompt || currentAttempt === 1;
+    if (elements.retryPrompt.hidden) {
+      elements.retryText.textContent = '';
+    } else {
+      elements.retryText.textContent = context.nextPrompt;
+    }
+    if (!context.isComplete) {
+      elements.saveRun.disabled = false;
+      elements.saveRun.innerHTML = 'Lancer les tests <span aria-hidden="true">→</span>';
+    }
+  }
 }
 
 async function refreshTasks() {
@@ -137,9 +223,9 @@ async function refreshResults() {
   if (rows.length === 0) {
     const row = document.createElement('tr');
     const cell = document.createElement('td');
-    cell.colSpan = 8;
+    cell.colSpan = 12;
     cell.className = 'empty-row';
-    cell.textContent = 'Aucune évaluation pour le moment.';
+    cell.textContent = 'Aucun résultat enregistré pour le moment.';
     row.append(cell);
     elements.resultsBody.append(row);
     return;
@@ -150,10 +236,14 @@ async function refreshResults() {
     for (const value of [
       result.task,
       result.tool,
-      result.passedTests,
+      result.modelVersion,
+      `${result.attemptNumber}/3`,
+      `${result.passedTests}/${result.totalTests}`,
+      result.correctness,
       result.quality,
       result.security,
-      result.trials,
+      result.timeIterations,
+      result.hallucinations,
       result.minutes,
       result.remarks
     ]) {
@@ -166,6 +256,68 @@ async function refreshResults() {
   }
 }
 
+async function refreshComparison() {
+  const comparisons = await api('/api/comparison');
+  elements.comparisonBody.replaceChildren();
+  for (const comparison of comparisons) {
+    const row = document.createElement('tr');
+    const taskCell = document.createElement('td');
+    taskCell.className = 'comparison-task';
+    const taskId = document.createElement('strong');
+    taskId.textContent = comparison.id;
+    const taskTitle = document.createElement('span');
+    taskTitle.textContent = comparison.title.replace(/^T\d+\s*-\s*/, '');
+    taskCell.append(taskId, taskTitle);
+    row.append(taskCell);
+
+    for (const score of comparison.scores) {
+      const cell = document.createElement('td');
+      cell.className = 'comparison-score';
+      if (score.percentage === null) {
+        cell.textContent = 'Non évalué';
+        cell.classList.add('not-evaluated');
+      } else {
+        cell.textContent = `${score.percentage} %`;
+        const attempt = document.createElement('small');
+        attempt.textContent = `Essai ${score.attemptNumber}`;
+        cell.append(attempt);
+        const isWinner = comparison.winner
+          ? comparison.winner.tool === score.tool
+          : comparison.tiedWinners.some((winner) => winner.tool === score.tool);
+        if (isWinner) cell.classList.add('winner-score');
+      }
+      row.append(cell);
+    }
+
+    const conclusion = document.createElement('td');
+    conclusion.className = 'comparison-conclusion';
+    conclusion.textContent = comparison.conclusion;
+    if (!comparison.winner && comparison.tiedWinners.length === 0) {
+      conclusion.classList.add('awaiting-results');
+    } else if (comparison.tiedWinners.length > 0) {
+      conclusion.classList.add('tie-result');
+    }
+    row.append(conclusion);
+    elements.comparisonBody.append(row);
+  }
+}
+
+function showView(view) {
+  const showComparison = view === 'comparison';
+  elements.evaluationView.hidden = showComparison;
+  elements.comparisonView.hidden = !showComparison;
+  elements.navEvaluation.classList.toggle('active', !showComparison);
+  elements.navComparison.classList.toggle('active', showComparison);
+  if (showComparison) {
+    elements.navEvaluation.removeAttribute('aria-current');
+    elements.navComparison.setAttribute('aria-current', 'page');
+  } else {
+    elements.navComparison.removeAttribute('aria-current');
+    elements.navEvaluation.setAttribute('aria-current', 'page');
+  }
+  if (showComparison) refreshComparison().catch(showError);
+}
+
 function showTestResult(result) {
   state.result = result;
   elements.testResult.hidden = false;
@@ -173,10 +325,12 @@ function showTestResult(result) {
   elements.testResult.replaceChildren();
   const title = document.createElement('p');
   title.className = 'result-title';
-  title.textContent = result.success ? 'Tests terminés' : 'Certains tests échouent';
+  title.textContent = result.success
+    ? `Les tests sont réussis à l’essai ${result.attempt.attemptNumber}`
+    : `Résultat de l’essai ${result.attempt.attemptNumber}`;
   const details = document.createElement('p');
   details.className = 'result-detail';
-  details.textContent = `${result.passed} réussi(s) · ${result.failed} échoué(s) · ${result.skipped} ignoré(s)`;
+  details.textContent = `${result.passed} sur ${result.total} tests réussis · ${result.failed} échoué(s) · ${result.skipped} non exécuté(s)`;
   elements.testResult.append(title, details);
 
   for (const failure of result.failures || []) {
@@ -186,46 +340,99 @@ function showTestResult(result) {
     elements.testResult.append(failureLine);
   }
 
-  if (!result.submissionExists || result.skipped > 0) {
+  if (result.skipped > 0) {
     const warning = document.createElement('p');
     warning.className = 'result-warning';
-    warning.textContent = 'Cette soumission n’a pas exécuté tous les tests. Vérifiez les exports indiqués dans l’énoncé.';
+    warning.textContent = 'Tous les tests n’ont pas été exécutés. Vérifiez les consignes de l’exercice.';
     elements.testResult.append(warning);
   }
-  elements.evaluationForm.hidden = !result.submissionExists;
+  elements.evaluationForm.hidden = false;
+  elements.retryPrompt.hidden = !result.canRetry;
+  elements.retryText.textContent = result.canRetry ? result.nextPrompt : '';
+  elements.saveRun.disabled = true;
+  if (!result.canRetry && !result.success) {
+    elements.saveRun.innerHTML = 'Les 3 essais sont terminés';
+  }
 }
 
 elements.tool.addEventListener('change', () => {
-  loadSubmission().catch(showError);
+  elements.resetStatus.hidden = true;
+  Promise.resolve()
+    .then(loadSubmission)
+    .then(loadAttemptContext)
+    .catch(showError);
 });
 
 elements.reloadCode.addEventListener('click', () => {
   loadSubmission().catch(showError);
 });
 
-elements.saveRun.addEventListener('click', async () => {
-  elements.saveRun.disabled = true;
-  elements.saveRun.textContent = 'Enregistrement et exécution…';
+elements.resetBenchmark.addEventListener('click', async () => {
+  if (!state.selectedTask) return;
+  const task = state.selectedTask;
+  const tool = elements.tool.value;
+  const confirmed = window.confirm(
+    `Réinitialiser ${task} pour ${tool} ? Cela supprimera le code collé, ` +
+    'les anciens essais et leurs lignes dans les résultats. ' +
+    'Les autres exercices et outils ne seront pas modifiés.'
+  );
+  if (!confirmed) return;
+
+  elements.resetBenchmark.disabled = true;
+  elements.resetStatus.hidden = true;
   try {
-    await api('/api/submission', {
-      method: 'PUT',
-      body: JSON.stringify({
-        task: state.selectedTask,
-        tool: elements.tool.value,
-        code: elements.code.value
-      })
+    const removed = await api('/api/benchmark', {
+      method: 'DELETE',
+      body: JSON.stringify({ task, tool })
     });
-    const result = await api('/api/run', {
-      method: 'POST',
-      body: JSON.stringify({ task: state.selectedTask, tool: elements.tool.value })
-    });
-    showTestResult(result);
-    await refreshTasks();
+    state.result = null;
+    elements.testResult.hidden = true;
+    elements.evaluationForm.hidden = true;
+    elements.retryPrompt.hidden = true;
+    elements.evaluationForm.reset();
+    await Promise.all([refreshTasks(), refreshResults()]);
+    await loadSubmission();
+    await loadAttemptContext();
+    elements.resetStatus.textContent = removed.removedAttempts || removed.removedSubmission ||
+      removed.removedResults
+      ? 'Exercice réinitialisé. Tu peux recommencer à l’essai 1.'
+      : 'Il n’y avait aucun ancien essai à effacer.';
+    elements.resetStatus.hidden = false;
   } catch (error) {
     showError(error);
   } finally {
-    elements.saveRun.disabled = false;
-    elements.saveRun.innerHTML = 'Enregistrer et lancer les tests <span aria-hidden="true">→</span>';
+    elements.resetBenchmark.disabled = false;
+  }
+});
+
+elements.saveRun.addEventListener('click', async () => {
+  state.result = null;
+  elements.saveRun.disabled = true;
+  elements.saveRun.textContent = 'Tests en cours…';
+  try {
+    const result = await api('/api/run', {
+      method: 'POST',
+      body: JSON.stringify({
+        task: state.selectedTask,
+        tool: elements.tool.value,
+        modelVersion: elements.modelVersion.value,
+        code: elements.code.value
+      })
+    });
+    showTestResult(result);
+    await refreshTasks();
+    state.attemptContext = await api(
+      `/api/attempts?task=${encodeURIComponent(state.selectedTask)}&tool=${encodeURIComponent(elements.tool.value)}`
+    );
+    elements.attemptCount.textContent =
+      `Essai ${result.attempt.attemptNumber} sur 3 · résultats enregistrés`;
+  } catch (error) {
+    showError(error);
+  } finally {
+    if (!state.result && state.attemptContext && !state.attemptContext.isComplete) {
+      elements.saveRun.disabled = false;
+      elements.saveRun.innerHTML = 'Lancer les tests <span aria-hidden="true">→</span>';
+    }
   }
 });
 
@@ -234,31 +441,52 @@ elements.evaluationForm.addEventListener('submit', async (event) => {
   if (!state.result || !state.selectedTask) return;
   const form = new FormData(elements.evaluationForm);
   const payload = Object.fromEntries(form.entries());
-  const trials = Number(payload.trials);
-  if (!Number.isInteger(trials) || trials < 1 || trials > 3) {
-    showError(new Error('Le protocole autorise de 1 à 3 essais.'));
-    return;
-  }
   try {
-    const saved = await api('/api/evaluate', {
+    await api('/api/evaluate', {
       method: 'POST',
       body: JSON.stringify({
         ...payload,
         task: state.selectedTask,
-        tool: elements.tool.value
+        tool: elements.tool.value,
+        attemptNumber: state.result.attempt.attemptNumber
       })
     });
-    showTestResult(saved);
+    state.result = null;
+    elements.evaluationForm.hidden = true;
+    elements.retryPrompt.hidden = true;
+    await loadAttemptContext();
     await refreshResults();
-    window.alert('Évaluation enregistrée dans results/results.csv.');
   } catch (error) {
     showError(error);
   }
 });
 
+async function copyPrompt(value, button, originalText) {
+  if (!value) return;
+  await navigator.clipboard.writeText(value);
+  button.textContent = 'Copié';
+  window.setTimeout(() => {
+    button.textContent = originalText;
+  }, 1500);
+}
+
+elements.copyPrompt.addEventListener('click', () => {
+  copyPrompt(elements.promptText.textContent, elements.copyPrompt, 'Copier la consigne')
+    .catch(showError);
+});
+
+elements.copyRetry.addEventListener('click', () => {
+  copyPrompt(elements.retryText.textContent, elements.copyRetry, 'Copier l’erreur exacte')
+    .catch(showError);
+});
+
 document.querySelector('#refresh-results').addEventListener('click', () => {
   refreshResults().catch(showError);
 });
+
+elements.navEvaluation.addEventListener('click', () => showView('evaluation'));
+elements.navComparison.addEventListener('click', () => showView('comparison'));
+document.querySelector('#print-comparison').addEventListener('click', () => window.print());
 
 function showError(error) {
   elements.testResult.hidden = false;

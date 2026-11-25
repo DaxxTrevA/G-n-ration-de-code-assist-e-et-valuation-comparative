@@ -4,23 +4,23 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const readline = require('node:readline/promises');
 const { stdin, stdout } = require('node:process');
+const { TASK_PATTERN, TOOLS } = require('./benchmark-config');
 
 const ROOT = path.join(__dirname, '..');
 const CSV_PATH = path.join(ROOT, 'results', 'results.csv');
-const TASK_PATTERN = /^T(?:0[1-9]|1[0-9]|20)$/;
-const TOOLS = ['GitHub Copilot', 'Cursor', 'Qwen Coder (Ollama)'];
-const TOOL_FILES = {
-  'GitHub Copilot': 'copilot',
-  Cursor: 'cursor',
-  'Qwen Coder (Ollama)': 'qwen'
-};
+const TOOL_NAMES = Object.keys(TOOLS);
 const CSV_HEADER = [
   'Tâche',
   'Outil',
+  'Modèle / version',
+  'Essai',
   'Tests réussis',
+  'Total des tests',
+  'Justesse /5',
   'Qualité /5',
   'Sécurité /5',
-  "Nombre d'essais",
+  'Temps et itérations /5',
+  'Hallucinations /5',
   'Temps en minutes',
   'Remarques'
 ];
@@ -41,7 +41,7 @@ function runTaskTests(task, tool) {
   if (!TASK_PATTERN.test(task)) {
     throw new Error('La tâche doit être comprise entre T01 et T20.');
   }
-  if (tool && !TOOL_FILES[tool]) {
+  if (tool && !TOOLS[tool]) {
     throw new Error(`Outil inconnu : ${tool}`);
   }
 
@@ -59,7 +59,7 @@ function runTaskTests(task, tool) {
 
   const env = { ...process.env };
   if (tool) {
-    env.P27_TOOL = TOOL_FILES[tool];
+    env.P27_TOOL = TOOLS[tool].file;
   } else {
     delete env.P27_TOOL;
   }
@@ -99,8 +99,9 @@ function runTaskTests(task, tool) {
   return {
     report,
     exitCode: result.status ?? 1,
+    output: [result.stdout, result.stderr].filter(Boolean).join('\n').trim(),
     submissionExists: tool
-      ? fs.existsSync(path.join(taskDirectory, 'submissions', `${TOOL_FILES[tool]}.js`))
+      ? fs.existsSync(path.join(taskDirectory, 'submissions', `${TOOLS[tool].file}.js`))
       : fs.existsSync(path.join(taskDirectory, 'submission.js'))
   };
 }
@@ -115,71 +116,65 @@ async function promptUntilValid(rl, label, validate, errorMessage) {
   }
 }
 
-async function promptForTool(rl) {
-  return promptUntilValid(
+async function collectEvaluation(rl, tool, selectedModelVersion = TOOLS[tool].defaultModel) {
+  const modelVersion = selectedModelVersion || await promptUntilValid(
     rl,
-    `Outil (${TOOLS.join(' / ')})`,
-    (value) => TOOLS.includes(value),
-    `Choisissez l’un de ces outils : ${TOOLS.join(', ')}.`
+    'Nom exact du modèle Copilot',
+    (value) => value.length > 0,
+    'Saisissez le modèle affiché dans Copilot.'
   );
-}
-
-async function collectEvaluation(rl, tool) {
-  const quality = await promptUntilValid(
-    rl,
-    'Qualité (/5)',
-    (value) => /^\d(?:[.,]\d+)?$/.test(value) && Number(value.replace(',', '.')) <= 5,
-    'Saisissez une note entre 0 et 5.'
-  );
-  const security = await promptUntilValid(
-    rl,
-    'Sécurité (/5)',
-    (value) => /^\d(?:[.,]\d+)?$/.test(value) && Number(value.replace(',', '.')) <= 5,
-    'Saisissez une note entre 0 et 5.'
-  );
-  const trials = await promptUntilValid(
-    rl,
-    "Nombre d'essais",
-    (value) => /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 3,
-    'Saisissez un entier compris entre 1 et 3 selon le protocole.'
-  );
+  const correctness = await promptScore(rl, 'Justesse');
+  const quality = await promptScore(rl, 'Qualité');
+  const security = await promptScore(rl, 'Sécurité');
+  const timeIterations = await promptScore(rl, 'Temps et itérations');
+  const hallucinations = await promptScore(rl, 'Hallucinations');
   const minutes = await promptUntilValid(
     rl,
-    'Temps en minutes',
+    'Temps écoulé en minutes',
     (value) => /^\d+(?:[.,]\d+)?$/.test(value),
     'Saisissez un nombre positif ou nul.'
   );
   const remarks = await rl.question('Remarques (Entrée pour aucune) : ');
   return {
     tool,
-    quality: quality.replace(',', '.'),
-    security: security.replace(',', '.'),
-    trials,
-    minutes: minutes.replace(',', '.'),
+    modelVersion,
+    correctness,
+    quality,
+    security,
+    timeIterations,
+    hallucinations,
+    minutes: Number(minutes.replace(',', '.')),
     remarks: remarks.trim()
   };
+}
+
+async function promptScore(rl, criterion) {
+  return Number(await promptUntilValid(
+    rl,
+    `${criterion} (/5)`,
+    (value) => /^[0-5]$/.test(value),
+    'Saisissez une note entière comprise entre 0 et 5 selon la grille.'
+  ));
 }
 
 function appendResult(task, testSummary, evaluation, csvPath = CSV_PATH) {
   fs.mkdirSync(path.dirname(csvPath), { recursive: true });
   const hasContent = fs.existsSync(csvPath) && fs.statSync(csvPath).size > 0;
   const header = `\uFEFF${formatCsvRow(CSV_HEADER)}\r\n`;
-  const notes = [evaluation.remarks];
-  if (testSummary.skippedSuites > 0) {
-    notes.push(`Suites ignorées : ${testSummary.skippedSuites}`);
-  }
-  if (!testSummary.submissionExists) {
-    notes.push('Soumission absente : aucun test de l’exercice exécuté');
-  }
   const row = formatCsvRow([
     task,
     evaluation.tool,
-    testSummary.passedTests,
+    evaluation.modelVersion,
+    testSummary.attemptNumber,
+    `${testSummary.passedTests}/${testSummary.totalTests}`,
+    testSummary.totalTests,
+    evaluation.correctness,
     evaluation.quality,
     evaluation.security,
-    evaluation.trials,
+    evaluation.timeIterations,
+    evaluation.hallucinations,
     evaluation.minutes,
-    notes.filter(Boolean).join(' | ')
+    evaluation.remarks
   ]);
   if (!hasContent) {
     fs.writeFileSync(csvPath, header, { encoding: 'utf8' });
@@ -188,6 +183,43 @@ function appendResult(task, testSummary, evaluation, csvPath = CSV_PATH) {
     fs.writeFileSync(csvPath, `\uFEFF${existingContent}`, { encoding: 'utf8' });
   }
   fs.appendFileSync(csvPath, `${row}\r\n`, { encoding: 'utf8' });
+}
+
+function removeResults(task, tool, csvPath = CSV_PATH) {
+  if (!TASK_PATTERN.test(task || '') || !TOOLS[tool]) {
+    throw new Error('Tâche ou outil inconnu.');
+  }
+  if (!fs.existsSync(csvPath)) {
+    return 0;
+  }
+
+  const rows = readResults(csvPath);
+  const remaining = rows.filter((row) => row.task !== task || row.tool !== tool);
+  const removedCount = rows.length - remaining.length;
+  if (removedCount === 0) {
+    return 0;
+  }
+
+  const values = (row) => [
+    row.task,
+    row.tool,
+    row.modelVersion,
+    row.attemptNumber,
+    row.passedTests,
+    row.totalTests,
+    row.correctness,
+    row.quality,
+    row.security,
+    row.timeIterations,
+    row.hallucinations,
+    row.minutes,
+    row.remarks
+  ];
+  const content = `\uFEFF${formatCsvRow(CSV_HEADER)}\r\n${
+    remaining.map((row) => formatCsvRow(values(row))).join('\r\n')
+  }${remaining.length ? '\r\n' : ''}`;
+  fs.writeFileSync(csvPath, content, { encoding: 'utf8' });
+  return removedCount;
 }
 
 function readResults(csvPath = CSV_PATH) {
@@ -234,15 +266,22 @@ function readResults(csvPath = CSV_PATH) {
     rows.push(row);
   }
 
-  return rows.slice(1).map((values) => ({
-    task: values[0] || '',
-    tool: values[1] || '',
-    passedTests: values[2] || '',
-    quality: values[3] || '',
-    security: values[4] || '',
-    trials: values[5] || '',
-    minutes: values[6] || '',
-    remarks: values[7] || ''
+  const [headerRow, ...dataRows] = rows;
+  const column = Object.fromEntries(headerRow.map((name, index) => [name, index]));
+  return dataRows.map((values) => ({
+    task: values[column['Tâche']] || '',
+    tool: values[column.Outil] || '',
+    modelVersion: values[column['Modèle / version']] || '',
+    attemptNumber: values[column.Essai] || '',
+    passedTests: values[column['Tests réussis']] || '',
+    totalTests: values[column['Total des tests']] || '',
+    correctness: values[column['Justesse /5']] || '',
+    quality: values[column['Qualité /5']] || '',
+    security: values[column['Sécurité /5']] || '',
+    timeIterations: values[column['Temps et itérations /5']] || '',
+    hallucinations: values[column['Hallucinations /5']] || '',
+    minutes: values[column['Temps en minutes']] || '',
+    remarks: values[column.Remarques] || ''
   }));
 }
 
@@ -254,23 +293,55 @@ async function main() {
 
   const rl = readline.createInterface({ input: stdin, output: stdout });
   try {
-    const tool = await promptForTool(rl);
-    const { report, exitCode, submissionExists } = runTaskTests(task, tool);
-    const summary = {
-      passedTests: report.numPassedTests,
-      failedTests: report.numFailedTests,
-      skippedSuites: report.numPendingTestSuites,
-      submissionExists
-    };
-    stdout.write(
-      `Bilan ${task} : ${summary.passedTests} test(s) réussi(s), ` +
-      `${summary.failedTests} échoué(s), ${summary.skippedSuites} suite(s) ignorée(s).\n`
+    const tool = await promptUntilValid(
+      rl,
+      `Outil (${TOOL_NAMES.join(' / ')})`,
+      (value) => TOOL_NAMES.includes(value),
+      `Choisissez l’un de ces outils : ${TOOL_NAMES.join(', ')}.`
     );
-    const evaluation = await collectEvaluation(rl, tool);
-    appendResult(task, summary, evaluation);
-    stdout.write(`Évaluation ajoutée à ${path.relative(ROOT, CSV_PATH)}.\n`);
-    if (exitCode !== 0) {
-      process.exitCode = exitCode;
+    const benchmark = require('./benchmark');
+    const context = benchmark.getAttemptContext(ROOT, task, tool);
+    if (context.isComplete || !context.nextPrompt) {
+      throw new Error('Cette tâche est terminée pour cet outil : aucun autre essai autorisé.');
+    }
+    stdout.write(`Prompt exact à donner à l’assistant (essai ${context.nextAttempt}) :\n`);
+    stdout.write(`${context.nextPrompt}\n\n`);
+    const submissionPath = path.join(ROOT, 'tasks', task, 'submissions', `${TOOLS[tool].file}.js`);
+    if (!fs.existsSync(submissionPath)) {
+      throw new Error(`Soumission absente : ${path.relative(ROOT, submissionPath)}. Enregistrez le code brut avant l’évaluation.`);
+    }
+    const modelVersion = TOOLS[tool].defaultModel || await promptUntilValid(
+      rl,
+      'Nom exact du modèle Copilot',
+      (value) => value.length > 0,
+      'Saisissez le modèle affiché dans Copilot.'
+    );
+    const result = benchmark.runAndRecordAttempt({
+      root: ROOT,
+      task,
+      tool,
+      code: fs.readFileSync(submissionPath, 'utf8'),
+      modelVersion
+    });
+    const attempt = result.attempt;
+    stdout.write(
+      `Essai ${attempt.attemptNumber} : ${attempt.testSummary.passed}/${attempt.testSummary.total} test(s), ` +
+      `${attempt.testSummary.failed} échoué(s), ${attempt.testSummary.skipped} ignoré(s).\n`
+    );
+    if (result.exitCode !== 0) {
+      stdout.write(`${attempt.retryPrompt}\n`);
+    }
+    const evaluation = await collectEvaluation(rl, tool, modelVersion);
+    benchmark.recordAttemptEvaluation({
+      root: ROOT,
+      task,
+      tool,
+      attemptNumber: attempt.attemptNumber,
+      evaluation
+    });
+    stdout.write(`Tentative enregistrée dans results/${TOOLS[tool].directory}/${task}/ et results/results.csv.\n`);
+    if (result.exitCode !== 0) {
+      process.exitCode = result.exitCode;
     }
   } finally {
     rl.close();
@@ -288,6 +359,7 @@ module.exports = {
   appendResult,
   escapeCsvCell,
   formatCsvRow,
+  removeResults,
   readResults,
   runTaskTests
 };

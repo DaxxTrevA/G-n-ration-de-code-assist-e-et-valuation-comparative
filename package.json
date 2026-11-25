@@ -5,6 +5,7 @@
   "description": "Infrastructure de tests pour le projet universitaire P27",
   "scripts": {
     "test": "jest --runInBand",
+    "test:all": "node scripts/test-suite.js",
     "start": "node scripts/server.js",
     "test:T01": "node scripts/test-task.js T01",
     "test:T02": "node scripts/test-task.js T02",
