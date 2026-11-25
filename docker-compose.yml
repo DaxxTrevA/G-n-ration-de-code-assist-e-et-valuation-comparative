@@ -1,0 +1,4 @@
+services:
+  p27-tests:
+    build: .
+    image: p27-tests
