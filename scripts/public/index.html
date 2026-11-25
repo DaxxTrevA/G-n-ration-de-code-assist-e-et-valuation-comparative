@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101c2c">
+    <title>P27 — Évaluation des assistants de code</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Accueil P27">
+        <span class="brand-mark">P27</span>
+        <span>Laboratoire de comparaison</span>
+      </a>
+      <span class="local-badge"><span></span> Espace local</span>
+    </header>
+
+    <main>
+      <section class="intro">
+        <p class="eyebrow">PROJET UNIVERSITAIRE · L2 INFORMATIQUE</p>
+        <h1>Mesurer le code,<br><span>pas les promesses.</span></h1>
+        <p class="intro-copy">Comparez les assistants sur les mêmes exercices, avec les mêmes tests.</p>
+      </section>
+
+      <section class="protocol-card" aria-labelledby="protocol-title">
+        <div class="protocol-icon" aria-hidden="true">01</div>
+        <div>
+          <p class="eyebrow">MÊMES RÈGLES POUR TOUS</p>
+          <h2 id="protocol-title">Un exercice de code, pas une question</h2>
+          <p>Chaque personne teste les 20 mêmes tâches avec son outil : <strong>A · Copilot</strong>, <strong>B · Cursor / Grok 4.7</strong>, <strong>C · Qwen + Ollama</strong>. Utilisez le même énoncé, au maximum 3 essais, et ne corrigez pas manuellement le code généré entre les essais.</p>
+          <p>Les tests mesurent le fonctionnement. Qualité, sécurité, temps et essais sont relevés par l’équipe, pas inventés par l’application.</p>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Évaluation d'un exercice">
+        <aside class="task-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">PARCOURS</p>
+              <h2>Les exercices</h2>
+            </div>
+            <span id="task-count" class="count-pill">20 tâches</span>
+          </div>
+          <div id="task-list" class="task-list" aria-label="Choisir une tâche"></div>
+        </aside>
+
+        <section class="exercise-panel">
+          <div class="exercise-heading">
+            <div>
+              <p id="task-kicker" class="eyebrow">EXERCICE</p>
+              <h2 id="task-title">Chargement…</h2>
+            </div>
+            <span id="task-status" class="status-pill">À choisir</span>
+          </div>
+          <article id="task-description" class="task-description">Chargement des exercices…</article>
+
+          <div class="submission-heading">
+            <div>
+              <p class="eyebrow">VOTRE SOUMISSION</p>
+              <h3>Code généré par l’assistant</h3>
+            </div>
+            <label class="tool-picker">
+              <span>Assistant</span>
+              <select id="tool">
+                <option>GitHub Copilot</option>
+                <option value="Cursor">Cursor — Grok 4.7</option>
+                <option>Qwen Coder (Ollama)</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="editor-wrap">
+            <div class="editor-bar"><span class="file-dot"></span><span id="editor-file">submission.js</span><span class="editor-language">JavaScript · CommonJS</span></div>
+            <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code de la soumission" placeholder="// Collez ici le code fourni par l'assistant.&#10;// Exportez les fonctions demandées avec module.exports."></textarea>
+          </div>
+          <p class="editor-hint">Chaque outil a son propre fichier de soumission pour comparer sans écraser les autres.</p>
+
+          <div class="button-row">
+            <button id="save-run" class="button button-primary">Enregistrer et lancer les tests <span aria-hidden="true">→</span></button>
+            <button id="reload-code" class="button button-secondary">Recharger le fichier</button>
+          </div>
+          <p class="safety-note">Collez le code brut de l’assistant sans le corriger. Il sera exécuté sur cette machine : relisez-le avant de lancer les tests.</p>
+
+          <section id="test-result" class="test-result" aria-live="polite" hidden></section>
+
+          <form id="evaluation-form" class="evaluation-form" hidden>
+            <div class="submission-heading">
+              <div>
+                <p class="eyebrow">ÉVALUATION HUMAINE</p>
+                <h3>Compléter le relevé</h3>
+              </div>
+              <span class="manual-tag">Saisie manuelle</span>
+            </div>
+            <div class="score-grid">
+              <label>Qualité <span>/5</span><input name="quality" type="number" min="0" max="5" step="0.5" required></label>
+              <label>Sécurité <span>/5</span><input name="security" type="number" min="0" max="5" step="0.5" required></label>
+              <label>Nombre d’essais (max. 3)<input name="trials" type="number" min="1" max="3" step="1" value="1" required></label>
+              <label>Temps en minutes<input name="minutes" type="number" min="0" step="0.1" required></label>
+            </div>
+            <label class="remarks-label">Remarques<textarea name="remarks" rows="2" placeholder="Bibliothèque inventée, difficulté, observations…"></textarea></label>
+            <button class="button button-primary" type="submit">Enregistrer l’évaluation</button>
+          </form>
+        </section>
+      </section>
+
+      <section class="results-section">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">JOURNAL DU PROJET</p>
+            <h2>Évaluations enregistrées</h2>
+          </div>
+          <button id="refresh-results" class="button button-secondary">Actualiser</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tâche</th><th>Outil</th><th>Tests réussis</th><th>Qualité</th><th>Sécurité</th><th>Essais</th><th>Temps</th><th>Remarques</th></tr></thead>
+            <tbody id="results-body"><tr><td class="empty-row" colspan="8">Aucune évaluation pour le moment.</td></tr></tbody>
+          </table>
+        </div>
+        <p class="results-footnote">Une ligne par tâche et par outil. Les notes de qualité, de sécurité, les essais et le temps sont saisis selon les observations — jamais inventés par l’application.</p>
+      </section>
+    </main>
+    <footer><span>P27 · Génération de code assistée et évaluation comparative</span><span>Une tâche · Trois assistants · Un protocole commun</span></footer>
+  </body>
+</html>

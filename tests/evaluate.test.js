@@ -1,7 +1,12 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { appendResult, escapeCsvCell, formatCsvRow } = require('../scripts/evaluate');
+const {
+  appendResult,
+  escapeCsvCell,
+  formatCsvRow,
+  readResults
+} = require('../scripts/evaluate');
 
 describe('CSV evaluation helpers', () => {
   test('quotes separators, quotes, and line breaks for Excel-compatible CSV', () => {
@@ -36,6 +41,16 @@ describe('CSV evaluation helpers', () => {
       const contents = fs.readFileSync(csvPath, 'utf8');
       expect(contents.charCodeAt(0)).toBe(0xfeff);
       expect(contents).toContain('T01;Cursor;2;4;3.5;2;1.5;"Test; note"');
+      expect(readResults(csvPath)).toEqual([{
+        task: 'T01',
+        tool: 'Cursor',
+        passedTests: '2',
+        quality: '4',
+        security: '3.5',
+        trials: '2',
+        minutes: '1.5',
+        remarks: 'Test; note'
+      }]);
     } finally {
       if (fs.existsSync(csvPath)) {
         fs.unlinkSync(csvPath);

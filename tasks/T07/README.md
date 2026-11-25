@@ -1,4 +1,9 @@
-# T07 - Exercice à définir
+# T07 - Compter les occurrences
 
-Structure prête à compléter : ajoutez ici l'énoncé, l'API attendue et les
-exemples avant d'écrire les tests de l'exercice.
+Implémentez `countOccurrences(values, target)` dans `submissions/<outil>.js`.
+La fonction compte les éléments égaux à `target` avec l'égalité stricte (`===`).
+Elle ne modifie pas le tableau reçu.
+
+Exemple : `countOccurrences(["a", "b", "a"], "a")` renvoie `2`.
+
+Exportez la fonction avec `module.exports = { countOccurrences }`.

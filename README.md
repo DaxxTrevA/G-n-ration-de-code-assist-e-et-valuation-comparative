@@ -1,40 +1,68 @@
-# Projet P27 - Generation de code assistee et evaluation comparative
+# P27 — Génération de code assistée et évaluation comparative
 
-P27 compare GitHub Copilot, Cursor et Qwen Coder avec Ollama sur les memes
-exercices de programmation. Les soumissions sont evaluees par des tests
-automatises et les mesures completes sont saisies par les membres de l'equipe.
-Aucun resultat de benchmark ni aucune solution de reference n'est fourni dans
-ce depot.
+[![Tests](https://github.com/DaxxTrevA/G-n-ration-de-code-assist-e-et-valuation-comparative/actions/workflows/tests.yml/badge.svg)](https://github.com/DaxxTrevA/G-n-ration-de-code-assist-e-et-valuation-comparative/actions/workflows/tests.yml)
 
-## Technologies
+P27 compare du code produit par GitHub Copilot, Cursor et Qwen Coder avec
+Ollama sur les mêmes exercices. L'équipe vérifie le code avec Jest et consigne
+les résultats observés. Ce dépôt fournit l'infrastructure technique et les
+20 exercices; il ne contient ni solutions de référence ni faux résultats.
 
-- Node.js (20 ou plus recent) et JavaScript CommonJS
-- Jest pour les tests
-- Docker et Docker Compose
-- GitHub Actions pour l'integration continue
-- CSV avec separateur point-virgule pour Excel
+## Comment la comparaison fonctionne
 
-## Organisation
+Les tâches sont des exercices de programmation, pas des questions de
+connaissances. Pour chaque tâche, donnez à l'assistant le même énoncé, puis
+vérifiez le code rendu avec les mêmes tests automatiques.
 
-- `tasks/T01` a `tasks/T05` : premiers exercices, leurs tests et un emplacement
-  `submission.js` a creer pour la solution generee par un assistant.
-- `tasks/T06` a `tasks/T20` : dossiers prets a recevoir un enonce et des tests.
-- `scripts/evaluate.js` : lance les tests d'une tache et ajoute une evaluation
-  renseignee par l'utilisateur dans le CSV.
-- `tests/` : utilitaires de test et tests du script de notation.
-- `results/results.csv` : evaluations effectives; le depot ne contient pas de
-  resultats fictifs.
-- `.github/workflows/tests.yml` : tests sur GitHub Actions.
+La répartition prévue est :
 
-## Installation
+| Responsable | Outil testé |
+| --- | --- |
+| Personne A | GitHub Copilot |
+| Personne B | Cursor avec le modèle Grok 4.7 |
+| Personne C | Qwen Coder avec Ollama |
 
-Installez Node.js 20+ puis, a la racine du depot :
+Chaque personne teste les 20 exercices avec son outil. Le tableau final contient
+donc jusqu'à trois lignes par tâche, une par outil. Pour limiter les différences
+dues à la manière de tester, appliquez les mêmes règles : le même énoncé, au
+maximum trois essais et aucune correction manuelle du code généré entre les
+essais. Collez le code brut de l'assistant dans l'interface et notez le nombre
+d'essais réellement effectués.
 
-```sh
-npm ci
-```
+Pour ce benchmark, le modèle utilisé dans Cursor est **Grok 4.7**. Notez
+aussi le nom exact du modèle Copilot sélectionné et la variante Qwen installée
+avec Ollama dans les remarques de chaque évaluation, afin que les résultats
+restent reproductibles.
 
-## Lancer les tests
+La fiabilité se juge sur des observations : tests réussis, nombre d'essais,
+qualité, sécurité et remarques (par exemple une bibliothèque annoncée qui
+n'existe pas). La qualité, la sécurité, le temps et les essais sont consignés
+par l'équipe; l'application n'invente pas ces mesures. Le barème commun détaillé
+est à valider par l'équipe avant le benchmark.
+
+Les exemples chiffrés de comparaison doivent provenir des résultats réellement
+collectés : aucun résultat hypothétique ne doit être présenté comme une mesure.
+
+## Interface graphique
+
+L'interface locale permet de lire les énoncés, coller et enregistrer une
+soumission distincte pour chaque assistant, exécuter les tests et renseigner
+les évaluations humaines. Les résultats s'ajoutent à `results/results.csv`.
+
+1. Installez Node.js 20 ou plus récent.
+2. À la racine du dépôt, exécutez `npm ci`.
+3. Lancez `npm start`.
+4. Ouvrez <http://localhost:3000>.
+5. Sélectionnez une tâche et un assistant, collez la réponse générée dans
+   l'éditeur, puis cliquez **Enregistrer et lancer les tests**.
+6. Après avoir vérifié le code et vos notes, complétez la qualité, la sécurité,
+   les essais et le temps, puis enregistrez l'évaluation.
+
+Le code collé sera exécuté sur votre machine : relisez-le avant de lancer les
+tests. Les soumissions sont stockées dans `tasks/Txx/submissions/` avec un
+fichier séparé par outil (`copilot.js`, `cursor.js`, `qwen.js`). Gardez les
+mêmes consignes et le même protocole pour chaque assistant.
+
+## Tests
 
 ```sh
 npm test
@@ -42,50 +70,66 @@ npm run test:T01
 npm run test:T02
 ```
 
-Les scripts `test:T01` a `test:T20` sont disponibles. Pour commencer une
-evaluation, placez le code genere dans `tasks/Txx/submission.js` en respectant
-l'API indiquee dans le README de la tache. Les tests de tache sont marques
-ignores tant que cette soumission n'existe pas : un exercice non implemente
-n'est donc pas presente comme reussi.
+`npm run test:T01` demande quel assistant tester puis exécute les tests sur sa
+soumission enregistrée. Dans l'interface, le code propre à l'assistant est
+exécuté au clic sur **Enregistrer et lancer les tests**. Sans soumission, le
+script indique où la saisir au lieu d'afficher un faux résultat réussi.
 
 ## Docker
 
-Avec Docker Desktop demarre et Docker Compose v2 installe :
+Avec Docker Desktop démarré et Docker Compose v2 installé, la commande demandée
+lance toute la suite de tests dans un environnement Node.js 20 :
 
 ```sh
 docker compose up --build
 ```
 
-Le conteneur installe les dependances de verrouillage et execute la suite Jest.
-
-## Noter une evaluation
+Pour lancer en plus l'interface web, ouvrez un second terminal et exécutez :
 
 ```sh
-node scripts/evaluate.js T01
+docker compose --profile gui up --build
 ```
 
-Le script execute les tests, puis demande l'outil utilise, la qualite (/5), la
-securite (/5), le nombre d'essais, le temps en minutes et les remarques. Les
-notes ne sont jamais calculees automatiquement. Une ligne est ajoutee a
-`results/results.csv` apres validation. Le fichier utilise le point-virgule et
-l'encodage UTF-8 avec BOM pour une ouverture plus fiable dans Excel.
+L'interface sera disponible sur <http://localhost:3000>. Les soumissions et le
+CSV sont montés depuis le dépôt pour rester disponibles après l'arrêt des
+conteneurs. Pour arrêter Docker Compose, utilisez `Ctrl+C`.
 
-## CI
+## Notation en ligne de commande
 
-La workflow GitHub Actions lance `npm ci` et `npm test` a chaque push et pull
-request. Apres avoir pousse le depot, ajoutez le badge dans la section de statut
-du README (remplacez `<OWNER>` et `<REPO>` par les valeurs du depot) :
-
-```md
-[![Tests](https://github.com/<OWNER>/<REPO>/actions/workflows/tests.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/tests.yml)
+```sh
+npm run evaluate -- T01
 ```
+
+Le script demande d'abord quel outil a produit la soumission, lance ses tests,
+puis demande les notes et mesures à saisir par l'équipe. Qualité, sécurité,
+nombre d'essais et temps ne sont jamais déduits automatiquement.
+
+## Organisation du dépôt
+
+- `tasks/T01` à `tasks/T20` : énoncé, tests Jest et répertoire des soumissions.
+- `scripts/evaluate.js` : tests et écriture des évaluations CSV.
+- `scripts/server.js` et `scripts/public/` : interface web et API locales.
+- `tests/` : utilitaires de chargement des soumissions et tests de l'outil.
+- `results/results.csv` : tableau des évaluations observées, vide au départ.
+- `.github/workflows/tests.yml` : CI exécutant Jest sur push et pull request.
+- `Dockerfile` et `docker-compose.yml` : exécution reproductible.
+
+Les énoncés couvrent des fonctions et algorithmes JavaScript, une réponse HTTP
+JSON, des requêtes SQL paramétrées, l'échappement HTML, des traitements de
+données, des opérations asynchrones et l'analyse CSV. Les tests donnent des
+exemples et vérifient les comportements attendus; les soumissions restent le
+travail des assistants comparés.
+
+## CI et badge GitHub
+
+Le workflow `.github/workflows/tests.yml` installe les dépendances avec
+`npm ci`, puis exécute `npm test` à chaque push et pull request. Après avoir
+Le badge ci-dessus suit le statut du workflow du dépôt.
 
 ## Contribution
 
-Chaque membre peut completer les exercices qui lui sont attribues, ajouter des
-tests reproductibles et documenter les changements. Conservez les solutions
-produites par chaque assistant separement pendant l'experimentation; seul le
-fichier `submission.js` actif est importe par les tests. Saisissez les mesures
-observees dans le CSV, sans inventer ni modifier les resultats d'execution.
-Utilisez une branche et une pull request pour les changements, et verifiez
-`npm test` avant de contribuer.
+La Personne A maintient le dépôt, les exercices, l'interface et l'infrastructure
+technique. Les Personnes B et C contribuent selon la répartition du projet.
+Utilisez une branche et une pull request; ne commitez jamais de mot de passe,
+jeton ou clé API. Inscrivez uniquement les mesures réellement observées dans
+le tableau commun.

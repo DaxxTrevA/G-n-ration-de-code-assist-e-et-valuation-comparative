@@ -9,6 +9,11 @@ const ROOT = path.join(__dirname, '..');
 const CSV_PATH = path.join(ROOT, 'results', 'results.csv');
 const TASK_PATTERN = /^T(?:0[1-9]|1[0-9]|20)$/;
 const TOOLS = ['GitHub Copilot', 'Cursor', 'Qwen Coder (Ollama)'];
+const TOOL_FILES = {
+  'GitHub Copilot': 'copilot',
+  Cursor: 'cursor',
+  'Qwen Coder (Ollama)': 'qwen'
+};
 const CSV_HEADER = [
   'Tâche',
   'Outil',
@@ -32,9 +37,12 @@ function formatCsvRow(values) {
   return values.map(escapeCsvCell).join(';');
 }
 
-function runTaskTests(task) {
+function runTaskTests(task, tool) {
   if (!TASK_PATTERN.test(task)) {
     throw new Error('La tâche doit être comprise entre T01 et T20.');
+  }
+  if (tool && !TOOL_FILES[tool]) {
+    throw new Error(`Outil inconnu : ${tool}`);
   }
 
   const taskDirectory = path.join(ROOT, 'tasks', task);
@@ -49,11 +57,32 @@ function runTaskTests(task) {
     throw new Error('Jest est introuvable. Lancez d’abord npm ci.');
   }
 
+  const env = { ...process.env };
+  if (tool) {
+    env.P27_TOOL = TOOL_FILES[tool];
+  } else {
+    delete env.P27_TOOL;
+  }
   const result = spawnSync(
     process.execPath,
-    [jestPath, testFile, '--runInBand', '--json', `--outputFile=${reportPath}`],
-    { cwd: ROOT, stdio: 'inherit' }
+    [
+      jestPath,
+      path.relative(ROOT, testFile).split(path.sep).join('/'),
+      '--runInBand',
+      '--json',
+      `--outputFile=${reportPath}`
+    ],
+    { cwd: ROOT, encoding: 'utf8', env }
   );
+  if (result.stdout) {
+    stdout.write(result.stdout);
+  }
+  if (result.stderr) {
+    process.stderr.write(result.stderr);
+  }
+  if (result.error) {
+    throw new Error(`Impossible de lancer Jest : ${result.error.message}`);
+  }
 
   let report;
   try {
@@ -70,7 +99,9 @@ function runTaskTests(task) {
   return {
     report,
     exitCode: result.status ?? 1,
-    submissionExists: fs.existsSync(path.join(taskDirectory, 'submission.js'))
+    submissionExists: tool
+      ? fs.existsSync(path.join(taskDirectory, 'submissions', `${TOOL_FILES[tool]}.js`))
+      : fs.existsSync(path.join(taskDirectory, 'submission.js'))
   };
 }
 
@@ -84,13 +115,16 @@ async function promptUntilValid(rl, label, validate, errorMessage) {
   }
 }
 
-async function collectEvaluation(rl) {
-  const tool = await promptUntilValid(
+async function promptForTool(rl) {
+  return promptUntilValid(
     rl,
     `Outil (${TOOLS.join(' / ')})`,
     (value) => TOOLS.includes(value),
     `Choisissez l’un de ces outils : ${TOOLS.join(', ')}.`
   );
+}
+
+async function collectEvaluation(rl, tool) {
   const quality = await promptUntilValid(
     rl,
     'Qualité (/5)',
@@ -106,8 +140,8 @@ async function collectEvaluation(rl) {
   const trials = await promptUntilValid(
     rl,
     "Nombre d'essais",
-    (value) => /^\d+$/.test(value) && Number(value) >= 1,
-    'Saisissez un entier supérieur ou égal à 1.'
+    (value) => /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 3,
+    'Saisissez un entier compris entre 1 et 3 selon le protocole.'
   );
   const minutes = await promptUntilValid(
     rl,
@@ -156,35 +190,90 @@ function appendResult(task, testSummary, evaluation, csvPath = CSV_PATH) {
   fs.appendFileSync(csvPath, `${row}\r\n`, { encoding: 'utf8' });
 }
 
+function readResults(csvPath = CSV_PATH) {
+  if (!fs.existsSync(csvPath)) {
+    return [];
+  }
+
+  const content = fs.readFileSync(csvPath, 'utf8').replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+
+  for (let index = 0; index < content.length; index += 1) {
+    const character = content[index];
+    if (quoted) {
+      if (character === '"' && content[index + 1] === '"') {
+        cell += '"';
+        index += 1;
+      } else if (character === '"') {
+        quoted = false;
+      } else {
+        cell += character;
+      }
+    } else if (character === '"') {
+      quoted = true;
+    } else if (character === ';') {
+      row.push(cell);
+      cell = '';
+    } else if (character === '\n') {
+      row.push(cell.replace(/\r$/, ''));
+      if (rows.length > 0 || row.some((value) => value !== '')) {
+        rows.push(row);
+      }
+      row = [];
+      cell = '';
+    } else {
+      cell += character;
+    }
+  }
+
+  if (cell || row.length > 0) {
+    row.push(cell.replace(/\r$/, ''));
+    rows.push(row);
+  }
+
+  return rows.slice(1).map((values) => ({
+    task: values[0] || '',
+    tool: values[1] || '',
+    passedTests: values[2] || '',
+    quality: values[3] || '',
+    security: values[4] || '',
+    trials: values[5] || '',
+    minutes: values[6] || '',
+    remarks: values[7] || ''
+  }));
+}
+
 async function main() {
   const task = process.argv[2];
   if (!TASK_PATTERN.test(task || '')) {
     throw new Error('Usage : npm run evaluate -- T01 (tâche comprise entre T01 et T20).');
   }
 
-  const { report, exitCode, submissionExists } = runTaskTests(task);
-  const summary = {
-    passedTests: report.numPassedTests,
-    failedTests: report.numFailedTests,
-    skippedSuites: report.numPendingTestSuites,
-    submissionExists
-  };
-  stdout.write(
-    `Bilan ${task} : ${summary.passedTests} test(s) réussi(s), ` +
-    `${summary.failedTests} échoué(s), ${summary.skippedSuites} suite(s) ignorée(s).\n`
-  );
-
   const rl = readline.createInterface({ input: stdin, output: stdout });
   try {
-    const evaluation = await collectEvaluation(rl);
+    const tool = await promptForTool(rl);
+    const { report, exitCode, submissionExists } = runTaskTests(task, tool);
+    const summary = {
+      passedTests: report.numPassedTests,
+      failedTests: report.numFailedTests,
+      skippedSuites: report.numPendingTestSuites,
+      submissionExists
+    };
+    stdout.write(
+      `Bilan ${task} : ${summary.passedTests} test(s) réussi(s), ` +
+      `${summary.failedTests} échoué(s), ${summary.skippedSuites} suite(s) ignorée(s).\n`
+    );
+    const evaluation = await collectEvaluation(rl, tool);
     appendResult(task, summary, evaluation);
     stdout.write(`Évaluation ajoutée à ${path.relative(ROOT, CSV_PATH)}.\n`);
+    if (exitCode !== 0) {
+      process.exitCode = exitCode;
+    }
   } finally {
     rl.close();
-  }
-
-  if (exitCode !== 0) {
-    process.exitCode = exitCode;
   }
 }
 
@@ -195,4 +284,10 @@ if (require.main === module) {
   });
 }
 
-module.exports = { appendResult, escapeCsvCell, formatCsvRow, runTaskTests };
+module.exports = {
+  appendResult,
+  escapeCsvCell,
+  formatCsvRow,
+  readResults,
+  runTaskTests
+};

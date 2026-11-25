@@ -7,4 +7,6 @@ RUN npm ci
 
 COPY . .
 
+USER node
+
 CMD ["npm", "test"]

@@ -1,4 +1,9 @@
-# T18 - Exercice à définir
+# T18 - Réessayer une opération asynchrone
 
-Structure prête à compléter : ajoutez ici l'énoncé, l'API attendue et les
-exemples avant d'écrire les tests de l'exercice.
+Implémentez `retryAsync(operation, maxAttempts)` dans `submissions/<outil>.js`.
+Appelez la fonction asynchrone jusqu'à son succès ou jusqu'à
+`maxAttempts` tentatives. Résolvez avec la valeur du premier succès. Si toutes
+les tentatives échouent, rejetez avec la dernière erreur. `maxAttempts` doit
+être un entier positif, sinon lancez une `RangeError`.
+
+Exportez la fonction avec `module.exports = { retryAsync }`.

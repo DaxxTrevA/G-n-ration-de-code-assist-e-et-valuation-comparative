@@ -1,4 +1,9 @@
-# T19 - Exercice à définir
+# T19 - Trier des objets par champ
 
-Structure prête à compléter : ajoutez ici l'énoncé, l'API attendue et les
-exemples avant d'écrire les tests de l'exercice.
+Implémentez `sortByField(items, field)` dans `submissions/<outil>.js`. Retournez
+un nouveau tableau trié par ordre croissant selon la valeur de `field`.
+Comparez les nombres numériquement et les chaînes avec
+`localeCompare`. Pour des valeurs égales, conservez l'ordre d'origine. Ne
+modifiez pas le tableau d'entrée.
+
+Exportez la fonction avec `module.exports = { sortByField }`.

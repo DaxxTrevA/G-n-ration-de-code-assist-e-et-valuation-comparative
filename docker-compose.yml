@@ -2,3 +2,18 @@ services:
   p27-tests:
     build: .
     image: p27-tests
+    init: true
+
+  p27-web:
+    image: p27-tests
+    profiles: ["gui"]
+    init: true
+    command: ["node", "scripts/server.js"]
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./tasks:/app/tasks
+      - ./results:/app/results

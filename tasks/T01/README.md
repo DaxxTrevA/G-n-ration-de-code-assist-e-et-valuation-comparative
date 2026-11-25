@@ -1,6 +1,7 @@
 # T01 - Mettre en majuscule la première lettre
 
-Implémentez `capitalize(text)` dans `submission.js`. La fonction reçoit une
+Implémentez `capitalize(text)` dans le fichier de l'assistant, par exemple
+`submissions/copilot.js`. La fonction reçoit une
 chaîne et renvoie la même chaîne avec uniquement son premier caractère mis en
 majuscule. Le reste de la chaîne ne doit pas être modifié. Une chaîne vide
 doit rester vide.
