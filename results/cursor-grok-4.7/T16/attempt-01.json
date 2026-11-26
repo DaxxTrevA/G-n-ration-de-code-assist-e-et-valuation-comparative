@@ -1,0 +1,45 @@
+{
+  "task": "T16",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T16 - Estimer la robustesse d'un mot de passe\r\n\r\nImplémentez `passwordStrength(password)` dans `submissions/<outil>.js`. Le\r\nrésultat est un entier de 0 à 5 : ajoutez un point pour une longueur d'au moins\r\n8 caractères, un autre pour au moins 12 caractères, et un point pour chacune\r\ndes catégories présentes parmi minuscules, majuscules, chiffres et caractères\r\nspéciaux. Le score est plafonné à 5. Ce score pédagogique n'est pas une\r\nvalidation de sécurité ni un stockage de mot de passe.\r\n\r\nExportez la fonction avec `module.exports = { passwordStrength }`.\r\n",
+  "response": "function passwordStrength(password) {\n  const s = String(password);\n  let score = 0;\n  if (s.length >= 8) score++;\n  if (s.length >= 12) score++;\n  if (/[a-z]/.test(s)) score++;\n  if (/[A-Z]/.test(s)) score++;\n  if (/[0-9]/.test(s)) score++;\n  if (/[^A-Za-z0-9]/.test(s)) score++;\n  return Math.min(score, 5);\n}\n\nmodule.exports = { passwordStrength };",
+  "startedAt": "2026-11-26T20:24:48.150Z",
+  "completedAt": "2026-11-26T20:24:49.248Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1096,
+    "exitCode": 0,
+    "output": "PASS tasks/T16/test.js\n  T16 - passwordStrength\n    √ scores the documented length and character categories (2 ms)\n    √ caps the score at five (1 ms)\n    √ returns a numeric score for an empty string\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.533 s\nRan all test suites matching /tasks\\\\T16\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724688150.json",
+    "cases": [
+      {
+        "name": "T16 - passwordStrength scores the documented length and character categories",
+        "status": "passed",
+        "durationMs": 2,
+        "details": ""
+      },
+      {
+        "name": "T16 - passwordStrength caps the score at five",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      },
+      {
+        "name": "T16 - passwordStrength returns a numeric score for an empty string",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

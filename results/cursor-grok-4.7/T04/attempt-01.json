@@ -1,0 +1,45 @@
+{
+  "task": "T04",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T04 - Compter les voyelles\r\n\r\nImplémentez `countVowels(text)` dans le fichier de l'assistant, par exemple\r\n`submissions/copilot.js`. La fonction renvoie le\r\nnombre de voyelles `a`, `e`, `i`, `o`, `u` présentes dans le texte, sans\r\ndifférencier majuscules et minuscules. Les voyelles accentuées ne sont pas\r\ncomptées. Les autres caractères sont ignorés.\r\n\r\nExemples : `countVowels(\"Bonjour\")` renvoie `3` et\r\n`countVowels(\"Été\")` renvoie `0`.\r\n\r\nExportez la fonction avec `module.exports = { countVowels }`.\r\n",
+  "response": "function countVowels(text) {\n  const matches = String(text).match(/[aeiou]/gi);\n  return matches ? matches.length : 0;\n}\n\nmodule.exports = { countVowels };",
+  "startedAt": "2026-11-26T20:19:52.652Z",
+  "completedAt": "2026-11-26T20:19:54.304Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1649,
+    "exitCode": 0,
+    "output": "PASS tasks/T04/test.js\n  T04 - countVowels\n    √ counts basic vowels in either case (3 ms)\n    √ does not count accented vowels (1 ms)\n    √ returns zero when there are no vowels\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.831 s\nRan all test suites matching /tasks\\\\T04\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724392652.json",
+    "cases": [
+      {
+        "name": "T04 - countVowels counts basic vowels in either case",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T04 - countVowels does not count accented vowels",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      },
+      {
+        "name": "T04 - countVowels returns zero when there are no vowels",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

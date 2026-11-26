@@ -1,0 +1,45 @@
+{
+  "task": "T13",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T13 - Échapper du texte pour du HTML\r\n\r\nImplémentez `escapeHtml(text)` dans `submissions/<outil>.js`. Remplacez les cinq\r\ncaractères `&`, `<`, `>`, `\"`, `'` par `&amp;`, `&lt;`, `&gt;`, `&quot;`,\r\n`&#39;`. Échappez l'esperluette en premier pour ne pas modifier les entités\r\ncréées. Les autres caractères restent inchangés.\r\n\r\nExemple : `escapeHtml(\"<b>\")` renvoie `\"&lt;b&gt;\"`.\r\n\r\nExportez la fonction avec `module.exports = { escapeHtml }`.\r\n",
+  "response": "function escapeHtml(text) {\n  return String(text)\n    .replace(/&/g, \"&amp;\")\n    .replace(/</g, \"&lt;\")\n    .replace(/>/g, \"&gt;\")\n    .replace(/\"/g, \"&quot;\")\n    .replace(/'/g, \"&#39;\");\n}\n\nmodule.exports = { escapeHtml };",
+  "startedAt": "2026-11-26T20:24:06.127Z",
+  "completedAt": "2026-11-26T20:24:07.222Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1093,
+    "exitCode": 0,
+    "output": "PASS tasks/T13/test.js\n  T13 - escapeHtml\n    √ escapes all HTML-sensitive characters (2 ms)\n    √ escapes ampersands before creating entities\n    √ preserves ordinary text and accepts empty input\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.518 s\nRan all test suites matching /tasks\\\\T13\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724646127.json",
+    "cases": [
+      {
+        "name": "T13 - escapeHtml escapes all HTML-sensitive characters",
+        "status": "passed",
+        "durationMs": 2,
+        "details": ""
+      },
+      {
+        "name": "T13 - escapeHtml escapes ampersands before creating entities",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T13 - escapeHtml preserves ordinary text and accepts empty input",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

@@ -1,6 +1,6 @@
 const tools = {
   'Cursor (Grok 4.7)': { file: 'cursor', model: 'Grok 4.7' },
-  'GitHub Copilot': { file: 'copilot', model: '' },
+  'GitHub Copilot': { file: 'copilot', model: 'GPT-6 Luna' },
   'Cline (Qwen2.5-Coder 7B / Ollama)': {
     file: 'cline-qwen2.5-coder-7b',
     model: 'Qwen2.5-Coder 7B (Ollama)'
@@ -35,6 +35,11 @@ const elements = {
   resetBenchmark: document.querySelector('#reset-benchmark'),
   resetStatus: document.querySelector('#reset-status'),
   testResult: document.querySelector('#test-result'),
+  executionPanel: document.querySelector('#execution-panel'),
+  executionMeta: document.querySelector('#execution-meta'),
+  executionOutput: document.querySelector('#execution-output'),
+  testCasesPanel: document.querySelector('#test-cases-panel'),
+  testCasesBody: document.querySelector('#test-cases-body'),
   retryPrompt: document.querySelector('#retry-prompt'),
   retryText: document.querySelector('#retry-text'),
   copyRetry: document.querySelector('#copy-retry'),
@@ -120,6 +125,8 @@ async function selectTask(taskId) {
   state.attemptContext = null;
   elements.resetStatus.hidden = true;
   elements.testResult.hidden = true;
+  elements.executionPanel.hidden = true;
+  elements.testCasesPanel.hidden = true;
   elements.evaluationForm.hidden = true;
   elements.retryPrompt.hidden = true;
   renderTaskList();
@@ -182,7 +189,7 @@ async function loadAttemptContext() {
     ? 'Exercice terminé'
     : 'Lancer les tests <span aria-hidden="true">→</span>';
 
-  if (lastAttempt && !lastAttempt.evaluation) {
+  if (lastAttempt) {
     elements.code.value = lastAttempt.response;
     showTestResult({
       attempt: lastAttempt,
@@ -191,13 +198,19 @@ async function loadAttemptContext() {
       failed: lastAttempt.testSummary.failed,
       skipped: lastAttempt.testSummary.skipped,
       failures: lastAttempt.failures || [],
+      testRun: lastAttempt.testRun,
       nextPrompt: lastAttempt.retryPrompt,
-      canRetry: lastAttempt.status !== 'Réussi' &&
+      canRetry: !context.awaitingEvaluation &&
+        !context.isComplete &&
+        lastAttempt.status !== 'Réussi' &&
         lastAttempt.attemptNumber < 3,
       success: lastAttempt.status === 'Réussi'
-    });
+    }, !lastAttempt.evaluation);
   } else {
+    state.result = null;
     elements.testResult.hidden = true;
+    elements.executionPanel.hidden = true;
+    elements.testCasesPanel.hidden = true;
     elements.evaluationForm.hidden = true;
     elements.retryPrompt.hidden = !context.nextPrompt || currentAttempt === 1;
     if (elements.retryPrompt.hidden) {
@@ -318,8 +331,50 @@ function showView(view) {
   if (showComparison) refreshComparison().catch(showError);
 }
 
-function showTestResult(result) {
-  state.result = result;
+function renderTestCases(cases, emptyMessage = 'Aucun cas de test détaillé retourné par Jest.') {
+  elements.testCasesBody.replaceChildren();
+  for (const testCase of cases || []) {
+    const row = document.createElement('tr');
+    const name = document.createElement('td');
+    name.textContent = testCase.name || 'Test sans nom';
+    const status = document.createElement('td');
+    const statusLabel = {
+      passed: 'Réussi',
+      failed: 'Échec',
+      pending: 'Ignoré',
+      skipped: 'Ignoré',
+      todo: 'À faire',
+      disabled: 'Ignoré'
+    }[testCase.status] || testCase.status || 'Inconnu';
+    status.textContent = statusLabel;
+    status.className = `test-case-status ${testCase.status || ''}`;
+    const duration = document.createElement('td');
+    duration.textContent = Number.isFinite(testCase.durationMs)
+      ? String(testCase.durationMs)
+      : '—';
+    const detail = document.createElement('td');
+    detail.className = 'test-case-detail';
+    detail.textContent = testCase.details ||
+      (testCase.status === 'passed'
+        ? 'Aucun écart signalé par Jest.'
+        : 'Aucun détail fourni par Jest.');
+    row.append(name, status, duration, detail);
+    elements.testCasesBody.append(row);
+  }
+  elements.testCasesPanel.hidden = false;
+  if (!elements.testCasesBody.childElementCount) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 4;
+    cell.className = 'empty-row';
+    cell.textContent = emptyMessage;
+    row.append(cell);
+    elements.testCasesBody.append(row);
+  }
+}
+
+function showTestResult(result, awaitingEvaluation = true) {
+  state.result = awaitingEvaluation ? result : null;
   elements.testResult.hidden = false;
   elements.testResult.classList.toggle('fail', !result.success);
   elements.testResult.replaceChildren();
@@ -330,8 +385,26 @@ function showTestResult(result) {
     : `Résultat de l’essai ${result.attempt.attemptNumber}`;
   const details = document.createElement('p');
   details.className = 'result-detail';
-  details.textContent = `${result.passed} sur ${result.total} tests réussis · ${result.failed} échoué(s) · ${result.skipped} non exécuté(s)`;
+  details.textContent = `${result.passed} sur ${result.total} cas de test réussis · ${result.failed} échoué(s) · ${result.skipped} non exécuté(s)`;
   elements.testResult.append(title, details);
+
+  const testRun = result.testRun || result.attempt.testRun;
+  elements.executionPanel.hidden = false;
+  if (testRun) {
+    elements.executionMeta.textContent =
+      `${testRun.durationMs} ms · code de sortie ${testRun.exitCode}`;
+    elements.executionOutput.textContent = [
+      `$ Jest ${result.attempt.task} · ${result.attempt.tool}`,
+      testRun.output || 'Jest n’a produit aucune sortie.',
+      `\nTerminé en ${testRun.durationMs} ms avec le code ${testRun.exitCode}.`
+    ].join('\n');
+    renderTestCases(testRun.cases);
+  } else {
+    elements.executionMeta.textContent = 'Ancien essai · journal indisponible';
+    elements.executionOutput.textContent =
+      'La sortie détaillée n’a pas été conservée pour cet essai.';
+    renderTestCases([], 'Les détails par cas n’ont pas été archivés pour cet essai précédent.');
+  }
 
   for (const failure of result.failures || []) {
     const failureLine = document.createElement('p');
@@ -346,16 +419,27 @@ function showTestResult(result) {
     warning.textContent = 'Tous les tests n’ont pas été exécutés. Vérifiez les consignes de l’exercice.';
     elements.testResult.append(warning);
   }
-  elements.evaluationForm.hidden = false;
+  elements.evaluationForm.hidden = !awaitingEvaluation;
   elements.retryPrompt.hidden = !result.canRetry;
   elements.retryText.textContent = result.canRetry ? result.nextPrompt : '';
-  elements.saveRun.disabled = true;
-  if (!result.canRetry && !result.success) {
+  elements.saveRun.classList.remove('is-running');
+  if (result.success) {
+    elements.saveRun.disabled = true;
+    elements.saveRun.textContent = 'Essai réussi';
+  } else if (result.canRetry && awaitingEvaluation) {
+    elements.saveRun.disabled = true;
+    elements.saveRun.textContent = 'Noter avant de continuer';
+  } else if (result.canRetry) {
+    elements.saveRun.disabled = false;
+    elements.saveRun.textContent = 'Lancer l’essai suivant';
+  } else {
+    elements.saveRun.disabled = true;
     elements.saveRun.innerHTML = 'Les 3 essais sont terminés';
   }
 }
 
 elements.tool.addEventListener('change', () => {
+  state.result = null;
   elements.resetStatus.hidden = true;
   Promise.resolve()
     .then(loadSubmission)
@@ -408,7 +492,13 @@ elements.resetBenchmark.addEventListener('click', async () => {
 elements.saveRun.addEventListener('click', async () => {
   state.result = null;
   elements.saveRun.disabled = true;
+  elements.saveRun.classList.add('is-running');
   elements.saveRun.textContent = 'Tests en cours…';
+  elements.executionPanel.hidden = false;
+  elements.executionMeta.textContent = 'Exécution en cours…';
+  elements.executionOutput.textContent =
+    `$ Jest ${state.selectedTask} · ${elements.tool.value}\nLancement des tests…`;
+  elements.testCasesPanel.hidden = true;
   try {
     const result = await api('/api/run', {
       method: 'POST',
@@ -428,10 +518,21 @@ elements.saveRun.addEventListener('click', async () => {
       `Essai ${result.attempt.attemptNumber} sur 3 · résultats enregistrés`;
   } catch (error) {
     showError(error);
+    elements.executionMeta.textContent = 'Erreur d’exécution';
+    elements.executionOutput.textContent = error.message;
+    elements.testCasesPanel.hidden = true;
   } finally {
-    if (!state.result && state.attemptContext && !state.attemptContext.isComplete) {
-      elements.saveRun.disabled = false;
-      elements.saveRun.innerHTML = 'Lancer les tests <span aria-hidden="true">→</span>';
+    elements.saveRun.classList.remove('is-running');
+    if (!state.result) {
+      const context = state.attemptContext;
+      elements.saveRun.disabled = Boolean(
+        context && (context.isComplete || context.awaitingEvaluation)
+      );
+      elements.saveRun.textContent = context && context.awaitingEvaluation
+        ? 'Noter avant de continuer'
+        : context && context.isComplete
+          ? 'Exercice terminé'
+          : 'Lancer les tests';
     }
   }
 });

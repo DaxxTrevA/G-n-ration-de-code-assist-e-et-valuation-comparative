@@ -8,7 +8,7 @@ const TOOLS = {
   'GitHub Copilot': {
     file: 'copilot',
     directory: 'copilot',
-    defaultModel: '',
+    defaultModel: 'GPT-6 Luna',
     person: 'B'
   },
   'Cline (Qwen2.5-Coder 7B / Ollama)': {

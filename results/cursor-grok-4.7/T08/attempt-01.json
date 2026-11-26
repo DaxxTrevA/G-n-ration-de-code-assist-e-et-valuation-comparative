@@ -1,0 +1,45 @@
+{
+  "task": "T08",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T08 - Supprimer les doublons en conservant l'ordre\r\n\r\nImplémentez `uniqueValues(values)` dans `submissions/<outil>.js`. La fonction\r\nrenvoie un nouveau tableau sans doublons, conserve la première occurrence de\r\nchaque valeur, respecte l'égalité utilisée par `Set` en JavaScript et ne\r\nmodifie pas le tableau d'origine.\r\n\r\nExemple : `uniqueValues([3, 1, 3, 2, 1])` renvoie `[3, 1, 2]`.\r\n\r\nExportez la fonction avec `module.exports = { uniqueValues }`.\r\n",
+  "response": "function uniqueValues(values) {\n  return [...new Set(values)];\n}\n\nmodule.exports = { uniqueValues };",
+  "startedAt": "2026-11-26T20:21:12.494Z",
+  "completedAt": "2026-11-26T20:21:13.617Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1121,
+    "exitCode": 0,
+    "output": "PASS tasks/T08/test.js\n  T08 - uniqueValues\n    √ removes duplicates and preserves first-seen order (3 ms)\n    √ handles an empty array\n    √ does not mutate the input (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.536 s\nRan all test suites matching /tasks\\\\T08\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724472495.json",
+    "cases": [
+      {
+        "name": "T08 - uniqueValues removes duplicates and preserves first-seen order",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T08 - uniqueValues handles an empty array",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T08 - uniqueValues does not mutate the input",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

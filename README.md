@@ -18,7 +18,7 @@ La répartition prévue est :
 | Responsable | Outil testé |
 | --- | --- |
 | Personne A | Cursor avec Grok 4.7 |
-| Personne B | GitHub Copilot |
+| Personne B | GitHub Copilot avec GPT-6 Luna |
 | Personne C | Cline avec Qwen2.5-Coder 7B dans Ollama |
 
 Chaque personne teste les 20 exercices avec son outil. Le tableau final contient
@@ -52,10 +52,23 @@ les évaluations humaines. Les résultats s'ajoutent à `results/results.csv`.
    **Enregistrer et lancer les tests**.
 7. Saisissez les notes de la grille et le temps écoulé après chaque tentative.
    En cas d'échec, copiez le message d'erreur affiché pour la tentative suivante.
+   Le journal affiche la sortie de Jest et sa durée; le tableau détaille les cas
+   réussis ou échoués. « 3/3 cas de test » désigne les vérifications de l'exercice,
+   tandis que « Essai 1 sur 3 » désigne le premier envoi de code à l'outil.
 8. Ouvrez **Comparaison** pour voir les 20 tâches. Le pourcentage de chaque
    outil est la moyenne de ses cinq notes lors de sa dernière tentative évaluée.
    Le meilleur outil apparaît seulement quand les trois ont des résultats.
    **Imprimer en A4** prépare le tableau pour l'impression.
+
+Chaque personne qui a cloné le dépôt doit exécuter `npm ci` avant de lancer
+l'interface : les dépendances, dont Jest, ne sont pas incluses dans Git. Sans
+Jest, le bouton de test ne peut pas exécuter les exercices.
+
+L'interface actuelle est locale : chaque clone écrit ses soumissions et ses
+résultats dans les fichiers de cette copie du dépôt. `git clone` ne synchronise
+pas les actions entre ordinateurs. Pour que plusieurs personnes utilisent une
+seule interface et partagent les mêmes résultats en direct, il faut héberger
+l'application avec un stockage partagé; ce n'est pas le mode fourni ici.
 
 Le code collé sera exécuté sur votre machine : relisez-le avant de lancer les
 tests. Les soumissions actives sont stockées dans `tasks/Txx/submissions/`;

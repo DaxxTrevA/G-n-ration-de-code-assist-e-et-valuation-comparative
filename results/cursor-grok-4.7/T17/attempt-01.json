@@ -1,0 +1,45 @@
+{
+  "task": "T17",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T17 - Trouver un nombre manquant\r\n\r\nImplémentez `findMissingNumber(values)` dans `submissions/<outil>.js`. Le\r\ntableau contient les entiers distincts d'un intervalle de 0 à n inclus, avec\r\nexactement une valeur manquante. Retournez cette valeur. Le tableau n'est pas\r\nmodifié.\r\n\r\nExemple : `findMissingNumber([3, 0, 1])` renvoie `2`.\r\n\r\nExportez la fonction avec `module.exports = { findMissingNumber }`.\r\n",
+  "response": "function findMissingNumber(values) {\n  const n = values.length;\n  let missing = (n * (n + 1)) / 2;\n  for (const v of values) missing -= v;\n  return missing;\n}\n\nmodule.exports = { findMissingNumber };",
+  "startedAt": "2026-11-26T20:24:59.100Z",
+  "completedAt": "2026-11-26T20:25:00.264Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1162,
+    "exitCode": 0,
+    "output": "PASS tasks/T17/test.js\n  T17 - findMissingNumber\n    √ finds a missing value in the middle or at the end (3 ms)\n    √ handles a single missing zero\n    √ does not mutate the input (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.56 s\nRan all test suites matching /tasks\\\\T17\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724699100.json",
+    "cases": [
+      {
+        "name": "T17 - findMissingNumber finds a missing value in the middle or at the end",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T17 - findMissingNumber handles a single missing zero",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T17 - findMissingNumber does not mutate the input",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

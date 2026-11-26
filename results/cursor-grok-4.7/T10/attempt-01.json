@@ -1,0 +1,45 @@
+{
+  "task": "T10",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T10 - Découper un tableau en lots\r\n\r\nImplémentez `chunkArray(values, size)` dans `submissions/<outil>.js`. Retournez\r\nun tableau de lots consécutifs de taille `size` au maximum. Le dernier lot peut\r\nêtre plus petit. `size` doit être un entier strictement positif, sinon la\r\nfonction lève une `RangeError`. Le tableau d'entrée reste inchangé.\r\n\r\nExemple : `chunkArray([1, 2, 3, 4, 5], 2)` renvoie\r\n`[[1, 2], [3, 4], [5]]`.\r\n\r\nExportez la fonction avec `module.exports = { chunkArray }`.\r\n",
+  "response": "function chunkArray(values, size) {\n  if (!Number.isInteger(size) || size <= 0) {\n    throw new RangeError(\"size must be a strictly positive integer\");\n  }\n  const chunks = [];\n  for (let i = 0; i < values.length; i += size) {\n    chunks.push(values.slice(i, i + size));\n  }\n  return chunks;\n}\n\nmodule.exports = { chunkArray };",
+  "startedAt": "2026-11-26T20:23:12.863Z",
+  "completedAt": "2026-11-26T20:23:14.002Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1137,
+    "exitCode": 0,
+    "output": "PASS tasks/T10/test.js\n  T10 - chunkArray\n    √ splits into consecutive chunks, including a partial final chunk (3 ms)\n    √ handles an empty array and a chunk larger than the input\n    √ rejects a non-positive or non-integer chunk size (8 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.542 s\nRan all test suites matching /tasks\\\\T10\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724592864.json",
+    "cases": [
+      {
+        "name": "T10 - chunkArray splits into consecutive chunks, including a partial final chunk",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T10 - chunkArray handles an empty array and a chunk larger than the input",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T10 - chunkArray rejects a non-positive or non-integer chunk size",
+        "status": "passed",
+        "durationMs": 8,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

@@ -1,0 +1,45 @@
+{
+  "task": "T05",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T05 - Générer FizzBuzz\r\n\r\nImplémentez `fizzBuzz(n)` dans le fichier de l'assistant, par exemple\r\n`submissions/copilot.js`. Pour un entier `n` positif ou\r\nnul, renvoyez un tableau contenant les valeurs de 1 à `n` : remplacez les\r\nmultiples de 3 par `\"Fizz\"`, ceux de 5 par `\"Buzz\"` et ceux des deux par\r\n`\"FizzBuzz\"`. `fizzBuzz(0)` renvoie un tableau vide.\r\n\r\nExemple : `fizzBuzz(5)` renvoie `[1, 2, \"Fizz\", 4, \"Buzz\"]`.\r\n\r\nExportez la fonction avec `module.exports = { fizzBuzz }`.\r\n",
+  "response": "function fizzBuzz(n) {\n  const result = [];\n  for (let i = 1; i <= n; i++) {\n    if (i % 15 === 0) result.push(\"FizzBuzz\");\n    else if (i % 3 === 0) result.push(\"Fizz\");\n    else if (i % 5 === 0) result.push(\"Buzz\");\n    else result.push(i);\n  }\n  return result;\n}\n\nmodule.exports = { fizzBuzz };",
+  "startedAt": "2026-11-26T20:20:09.507Z",
+  "completedAt": "2026-11-26T20:20:10.589Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1080,
+    "exitCode": 0,
+    "output": "PASS tasks/T05/test.js\n  T05 - fizzBuzz\n    √ replaces multiples of three and five (3 ms)\n    √ returns an empty array for zero\n    √ keeps ordinary values as numbers\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.539 s\nRan all test suites matching /tasks\\\\T05\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724409507.json",
+    "cases": [
+      {
+        "name": "T05 - fizzBuzz replaces multiples of three and five",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T05 - fizzBuzz returns an empty array for zero",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T05 - fizzBuzz keeps ordinary values as numbers",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

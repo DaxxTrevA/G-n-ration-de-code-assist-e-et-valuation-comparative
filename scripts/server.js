@@ -171,6 +171,7 @@ async function handleApi(request, response, url) {
       total: result.attempt.testSummary.total,
       failed: result.attempt.testSummary.failed,
       skipped: result.attempt.testSummary.skipped,
+      testRun: result.attempt.testRun,
       failures: result.failures,
       success: result.attempt.status === 'Réussi',
       nextPrompt: result.attempt.retryPrompt,
@@ -205,7 +206,8 @@ async function handleApi(request, response, url) {
       scoreFields.some((field) => Number(body[field]) < 0 || Number(body[field]) > 5) ||
       !isMinutes(body.minutes) ||
       !Number.isFinite(Number(body.minutes)) || Number(body.minutes) < 0 ||
-      typeof body.remarks !== 'string'
+      typeof body.remarks !== 'string' ||
+      body.remarks.trim().length === 0
     ) {
       throw Object.assign(new Error('Vérifiez les cinq notes (/5), le temps et les remarques.'), {
         statusCode: 400

@@ -1,0 +1,45 @@
+{
+  "task": "T11",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T11 - Construire une réponse JSON HTTP\r\n\r\nImplémentez `createJsonResponse(statusCode, data)` dans\r\n`submissions/<outil>.js`. Retournez un objet contenant le code HTTP, l'en-tête\r\n`Content-Type: application/json; charset=utf-8` et le corps encodé avec\r\n`JSON.stringify(data)`. Le corps est une chaîne. La fonction ne démarre pas de\r\nserveur réseau.\r\n\r\nExportez la fonction avec `module.exports = { createJsonResponse }`.\r\n",
+  "response": "function createJsonResponse(statusCode, data) {\n  return {\n    statusCode,\n    headers: {\n      \"Content-Type\": \"application/json; charset=utf-8\",\n    },\n    body: JSON.stringify(data),\n  };\n}\n\nmodule.exports = { createJsonResponse };",
+  "startedAt": "2026-11-26T20:23:23.839Z",
+  "completedAt": "2026-11-26T20:23:24.922Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1081,
+    "exitCode": 0,
+    "output": "PASS tasks/T11/test.js\n  T11 - createJsonResponse\n    √ returns the status, JSON content type, and serialized body (6 ms)\n    √ serializes arrays and strings as JSON\n    √ does not modify the supplied data (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.547 s\nRan all test suites matching /tasks\\\\T11\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724603840.json",
+    "cases": [
+      {
+        "name": "T11 - createJsonResponse returns the status, JSON content type, and serialized body",
+        "status": "passed",
+        "durationMs": 6,
+        "details": ""
+      },
+      {
+        "name": "T11 - createJsonResponse serializes arrays and strings as JSON",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T11 - createJsonResponse does not modify the supplied data",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

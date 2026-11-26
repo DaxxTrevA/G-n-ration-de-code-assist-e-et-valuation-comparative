@@ -1,0 +1,45 @@
+{
+  "task": "T03",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T03 - Additionner un tableau\r\n\r\nImplémentez `sumArray(numbers)` dans le fichier de l'assistant, par exemple\r\n`submissions/copilot.js`. La fonction reçoit un\r\ntableau de nombres et renvoie leur somme. Un tableau vide donne `0`. Les\r\ntableaux de test ne contiennent que des nombres finis.\r\n\r\nExemples : `sumArray([2, 3, 5])` renvoie `10` et `sumArray([])` renvoie `0`.\r\n\r\nExportez la fonction avec `module.exports = { sumArray }`.\r\n",
+  "response": "function sumArray(numbers) {\n  return numbers.reduce((total, value) => total + value, 0);\n}\n\nmodule.exports = { sumArray };",
+  "startedAt": "2026-11-26T20:05:18.197Z",
+  "completedAt": "2026-11-26T20:05:19.528Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1329,
+    "exitCode": 0,
+    "output": "PASS tasks/T03/test.js\n  T03 - sumArray\n    √ adds positive and negative numbers (2 ms)\n    √ returns zero for an empty array (1 ms)\n    √ does not mutate the input array (2 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.518 s, estimated 1 s\nRan all test suites matching /tasks\\\\T03\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795723518197.json",
+    "cases": [
+      {
+        "name": "T03 - sumArray adds positive and negative numbers",
+        "status": "passed",
+        "durationMs": 2,
+        "details": ""
+      },
+      {
+        "name": "T03 - sumArray returns zero for an empty array",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      },
+      {
+        "name": "T03 - sumArray does not mutate the input array",
+        "status": "passed",
+        "durationMs": 2,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

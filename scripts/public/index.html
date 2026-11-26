@@ -33,7 +33,7 @@
         <div>
           <p class="eyebrow">LE PRINCIPE</p>
           <h2 id="protocol-title">Comment ça marche ?</h2>
-          <p>Choisissez un exercice, demandez le code à votre outil, puis lancez les tests. A utilise <strong>Cursor / Grok 4.7</strong>, B <strong>GitHub Copilot</strong> et C <strong>Cline / Qwen</strong>.</p>
+          <p>Choisissez un exercice, demandez le code à votre outil, puis lancez les tests. A utilise <strong>Cursor / Grok 4.7</strong>, B <strong>GitHub Copilot / GPT-6 Luna</strong> et C <strong>Cline / Qwen</strong>.</p>
           <p>Tout le monde suit le même énoncé. Trois essais maximum, sans corriger le code à la main.</p>
         </div>
       </section>
@@ -69,7 +69,7 @@
               <span>Outil testé</span>
               <select id="tool">
                 <option value="Cursor (Grok 4.7)">Personne A — Cursor / Grok 4.7</option>
-                <option value="GitHub Copilot">Personne B — GitHub Copilot</option>
+                <option value="GitHub Copilot">Personne B — GitHub Copilot / GPT-6 Luna</option>
                 <option value="Cline (Qwen2.5-Coder 7B / Ollama)">Personne C — Cline / Qwen2.5-Coder 7B</option>
               </select>
             </label>
@@ -107,6 +107,33 @@
 
           <section id="test-result" class="test-result" aria-live="polite" hidden></section>
 
+          <section id="execution-panel" class="execution-panel" aria-live="polite" hidden>
+            <div class="detail-heading">
+              <div>
+                <p class="eyebrow">JOURNAL D’EXÉCUTION</p>
+                <h3>Console des tests</h3>
+              </div>
+              <span id="execution-meta" class="execution-meta"></span>
+            </div>
+            <pre id="execution-output" class="terminal-output"></pre>
+          </section>
+
+          <section id="test-cases-panel" class="test-cases-panel" hidden>
+            <div class="detail-heading">
+              <div>
+                <p class="eyebrow">DÉTAIL EN DIRECT</p>
+                <h3>Cas vérifiés et résultats</h3>
+              </div>
+            </div>
+            <p class="detail-hint">En cas d’échec, le détail Jest affiche les valeurs attendue et reçue lorsqu’elles sont disponibles.</p>
+            <div class="table-wrap">
+              <table class="test-cases-table">
+                <thead><tr><th>Comportement vérifié</th><th>Résultat</th><th>Durée (ms)</th><th>Détail Jest / écart</th></tr></thead>
+                <tbody id="test-cases-body"></tbody>
+              </table>
+            </div>
+          </section>
+
           <section id="retry-prompt" class="prompt-panel retry-panel" hidden>
             <div class="prompt-heading">
               <div>
@@ -134,7 +161,7 @@
               <label title="Selon les bibliothèques ou fonctions inventées">Hallucinations <span>/5</span><input name="hallucinations" type="number" min="0" max="5" step="1" required></label>
               <label>Temps écoulé en minutes<input name="minutes" type="number" min="0" step="0.1" required></label>
             </div>
-            <label class="remarks-label">Justification / remarques<textarea name="remarks" rows="2" placeholder="Faits observés pour justifier les notes, erreur éventuelle, hallucinations…"></textarea></label>
+            <label class="remarks-label">Justification / remarques<textarea name="remarks" rows="2" placeholder="Faits observés pour justifier les notes, erreur éventuelle, hallucinations…" required></textarea></label>
             <button id="save-evaluation" class="button button-primary" type="submit">Enregistrer les notes</button>
           </form>
         </section>

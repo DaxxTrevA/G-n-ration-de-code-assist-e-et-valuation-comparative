@@ -9,7 +9,7 @@ pas les consignes ou l'aide apportée par la personne.
 | Personne | Outil et modèle |
 | --- | --- |
 | A | Cursor avec Grok 4.7 |
-| B | GitHub Copilot; noter le nom exact du modèle affiché |
+| B | GitHub Copilot avec GPT-6 Luna |
 | C | Cline avec Qwen2.5-Coder 7B dans Ollama |
 
 Noter également la version du client et du modèle avant les essais et ne pas

@@ -54,7 +54,9 @@ function runTaskTests(task, tool) {
   const reportPath = path.join(os.tmpdir(), `p27-jest-${process.pid}-${Date.now()}.json`);
   const jestPath = path.join(ROOT, 'node_modules', 'jest', 'bin', 'jest.js');
   if (!fs.existsSync(jestPath)) {
-    throw new Error('Jest est introuvable. Lancez d’abord npm ci.');
+    throw Object.assign(new Error('Jest est introuvable. Depuis la racine du dépôt, lancez npm ci puis redémarrez npm start.'), {
+      statusCode: 503
+    });
   }
 
   const env = { ...process.env };
@@ -63,6 +65,7 @@ function runTaskTests(task, tool) {
   } else {
     delete env.P27_TOOL;
   }
+  const startedAt = Date.now();
   const result = spawnSync(
     process.execPath,
     [
@@ -74,6 +77,7 @@ function runTaskTests(task, tool) {
     ],
     { cwd: ROOT, encoding: 'utf8', env }
   );
+  const durationMs = Date.now() - startedAt;
   if (result.stdout) {
     stdout.write(result.stdout);
   }
@@ -100,6 +104,7 @@ function runTaskTests(task, tool) {
     report,
     exitCode: result.status ?? 1,
     output: [result.stdout, result.stderr].filter(Boolean).join('\n').trim(),
+    durationMs,
     submissionExists: tool
       ? fs.existsSync(path.join(taskDirectory, 'submissions', `${TOOLS[tool].file}.js`))
       : fs.existsSync(path.join(taskDirectory, 'submission.js'))
@@ -134,7 +139,12 @@ async function collectEvaluation(rl, tool, selectedModelVersion = TOOLS[tool].de
     (value) => /^\d+(?:[.,]\d+)?$/.test(value),
     'Saisissez un nombre positif ou nul.'
   );
-  const remarks = await rl.question('Remarques (Entrée pour aucune) : ');
+  const remarks = await promptUntilValid(
+    rl,
+    'Justification factuelle',
+    (value) => value.trim().length > 0,
+    'Indiquez au moins une observation factuelle.'
+  );
   return {
     tool,
     modelVersion,
