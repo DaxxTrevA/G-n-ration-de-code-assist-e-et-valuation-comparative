@@ -79,6 +79,9 @@ function runAndRecordAttempt({ root, task, tool, code, modelVersion }) {
   if (typeof modelVersion !== 'string' || modelVersion.trim().length === 0) {
     throw new Error('Indiquez le modèle ou la version exacte utilisée.');
   }
+  if (toolConfig.defaultModel && modelVersion.trim() !== toolConfig.defaultModel) {
+    throw new Error(`Le modèle fixé pour cet outil est ${toolConfig.defaultModel}.`);
+  }
 
   const context = getAttemptContext(root, task, tool);
   if (context.awaitingEvaluation) {
@@ -165,6 +168,9 @@ function recordAttemptEvaluation({ root, task, tool, attemptNumber, evaluation }
   }
   if (typeof evaluation.remarks !== 'string') {
     throw new Error('Les remarques doivent être du texte.');
+  }
+  if (evaluation.remarks.trim().length === 0) {
+    throw new Error('Une justification factuelle est obligatoire.');
   }
 
   const savedEvaluation = {

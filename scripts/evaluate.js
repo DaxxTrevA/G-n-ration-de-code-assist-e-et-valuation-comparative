@@ -54,7 +54,9 @@ function runTaskTests(task, tool) {
   const reportPath = path.join(os.tmpdir(), `p27-jest-${process.pid}-${Date.now()}.json`);
   const jestPath = path.join(ROOT, 'node_modules', 'jest', 'bin', 'jest.js');
   if (!fs.existsSync(jestPath)) {
-    throw new Error('Jest est introuvable. Lancez d’abord npm ci.');
+    throw Object.assign(new Error('Jest est introuvable. Depuis la racine du dépôt, lancez npm ci puis redémarrez npm start.'), {
+      statusCode: 503
+    });
   }
 
   const env = { ...process.env };
@@ -134,7 +136,12 @@ async function collectEvaluation(rl, tool, selectedModelVersion = TOOLS[tool].de
     (value) => /^\d+(?:[.,]\d+)?$/.test(value),
     'Saisissez un nombre positif ou nul.'
   );
-  const remarks = await rl.question('Remarques (Entrée pour aucune) : ');
+  const remarks = await promptUntilValid(
+    rl,
+    'Justification factuelle',
+    (value) => value.trim().length > 0,
+    'Indiquez au moins une observation factuelle.'
+  );
   return {
     tool,
     modelVersion,

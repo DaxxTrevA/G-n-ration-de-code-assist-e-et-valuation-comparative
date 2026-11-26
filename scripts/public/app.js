@@ -1,6 +1,6 @@
 const tools = {
   'Cursor (Grok 4.7)': { file: 'cursor', model: 'Grok 4.7' },
-  'GitHub Copilot': { file: 'copilot', model: '' },
+  'GitHub Copilot': { file: 'copilot', model: 'GPT-6 Luna' },
   'Cline (Qwen2.5-Coder 7B / Ollama)': {
     file: 'cline-qwen2.5-coder-7b',
     model: 'Qwen2.5-Coder 7B (Ollama)'

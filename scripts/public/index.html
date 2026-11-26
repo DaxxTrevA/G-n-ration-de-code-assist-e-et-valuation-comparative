@@ -33,7 +33,7 @@
         <div>
           <p class="eyebrow">LE PRINCIPE</p>
           <h2 id="protocol-title">Comment ça marche ?</h2>
-          <p>Choisissez un exercice, demandez le code à votre outil, puis lancez les tests. A utilise <strong>Cursor / Grok 4.7</strong>, B <strong>GitHub Copilot</strong> et C <strong>Cline / Qwen</strong>.</p>
+          <p>Choisissez un exercice, demandez le code à votre outil, puis lancez les tests. A utilise <strong>Cursor / Grok 4.7</strong>, B <strong>GitHub Copilot / GPT-6 Luna</strong> et C <strong>Cline / Qwen</strong>.</p>
           <p>Tout le monde suit le même énoncé. Trois essais maximum, sans corriger le code à la main.</p>
         </div>
       </section>
@@ -69,7 +69,7 @@
               <span>Outil testé</span>
               <select id="tool">
                 <option value="Cursor (Grok 4.7)">Personne A — Cursor / Grok 4.7</option>
-                <option value="GitHub Copilot">Personne B — GitHub Copilot</option>
+                <option value="GitHub Copilot">Personne B — GitHub Copilot / GPT-6 Luna</option>
                 <option value="Cline (Qwen2.5-Coder 7B / Ollama)">Personne C — Cline / Qwen2.5-Coder 7B</option>
               </select>
             </label>
@@ -134,7 +134,7 @@
               <label title="Selon les bibliothèques ou fonctions inventées">Hallucinations <span>/5</span><input name="hallucinations" type="number" min="0" max="5" step="1" required></label>
               <label>Temps écoulé en minutes<input name="minutes" type="number" min="0" step="0.1" required></label>
             </div>
-            <label class="remarks-label">Justification / remarques<textarea name="remarks" rows="2" placeholder="Faits observés pour justifier les notes, erreur éventuelle, hallucinations…"></textarea></label>
+            <label class="remarks-label">Justification / remarques<textarea name="remarks" rows="2" placeholder="Faits observés pour justifier les notes, erreur éventuelle, hallucinations…" required></textarea></label>
             <button id="save-evaluation" class="button button-primary" type="submit">Enregistrer les notes</button>
           </form>
         </section>

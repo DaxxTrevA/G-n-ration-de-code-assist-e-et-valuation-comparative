@@ -29,6 +29,10 @@ describe('benchmark attempt records', () => {
     fs.rmSync(root, { recursive: true, force: true });
   });
 
+  test('fixes the Copilot benchmark model to GPT-6 Luna', () => {
+    expect(TOOLS['GitHub Copilot'].defaultModel).toBe('GPT-6 Luna');
+  });
+
   test('uses the exact task statement for the first attempt', () => {
     const context = getAttemptContext(root, 'T01', 'Cursor (Grok 4.7)');
     expect(context.nextAttempt).toBe(1);
@@ -148,6 +152,37 @@ describe('benchmark attempt records', () => {
       minutes: 6.5
     });
     expect(readResults(path.join(root, 'results', 'results.csv'))).toHaveLength(1);
+  });
+
+  test('requires a factual justification with the rubric evaluation', () => {
+    const toolName = 'GitHub Copilot';
+    const directory = path.join(root, 'results', TOOLS[toolName].directory, 'T01');
+    fs.mkdirSync(directory, { recursive: true });
+    fs.writeFileSync(path.join(directory, 'attempt-01.json'), JSON.stringify({
+      task: 'T01',
+      tool: toolName,
+      modelVersion: 'GPT-6 Luna',
+      attemptNumber: 1,
+      status: 'Réussi',
+      testSummary: { passed: 3, total: 3, failed: 0, skipped: 0 },
+      evaluation: null
+    }));
+
+    expect(() => recordAttemptEvaluation({
+      root,
+      task: 'T01',
+      tool: toolName,
+      attemptNumber: 1,
+      evaluation: {
+        correctness: 5,
+        quality: 5,
+        security: 5,
+        timeIterations: 5,
+        hallucinations: 5,
+        minutes: 2,
+        remarks: '   '
+      }
+    })).toThrow('justification factuelle');
   });
 
   test('resets only the selected task and tool, including code and CSV rows', () => {
