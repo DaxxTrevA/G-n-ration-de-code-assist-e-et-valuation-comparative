@@ -148,9 +148,14 @@ travail des assistants comparés.
 
 ## CI et badge GitHub
 
-Le workflow `.github/workflows/tests.yml` installe les dépendances avec
-`npm ci`, puis exécute `npm test` à chaque push et pull request. Le badge
-ci-dessus suit le statut du workflow du dépôt.
+Le workflow `.github/workflows/tests.yml` s'exécute à chaque push et pull
+request. Il construit l'image Docker (qui installe les dépendances avec
+`npm ci`), exécute les tests du projet, puis teste les soumissions disponibles
+pour Cursor, Copilot et Cline sur leurs tâches respectives. Une soumission qui
+échoue fait échouer la CI. Les tâches sans soumission sont explicitement
+comptées comme « non testées » et signalées dans les journaux; elles ne sont
+jamais présentées comme réussies. Le badge ci-dessus suit le statut du workflow
+du dépôt.
 
 ## Contribution
 

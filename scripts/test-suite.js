@@ -5,6 +5,7 @@ const { TOOLS } = require('./benchmark-config');
 
 const ROOT = path.join(__dirname, '..');
 const taskIds = Array.from({ length: 20 }, (_, index) => `T${String(index + 1).padStart(2, '0')}`);
+const allowMissing = process.argv.includes('--allow-missing');
 
 function main() {
   const tool = Object.entries(TOOLS).find(([, config]) => config.file === process.env.P27_TOOL);
@@ -44,9 +45,14 @@ function main() {
   }
 
   stdoutLine(`Bilan : ${tested} tâche(s) testée(s), ${failed} échec(s), ${missing} non testée(s).`);
+  if (allowMissing && missing > 0) {
+    stdoutLine(
+      `Avertissement : ${missing} soumission(s) absente(s); les tâches correspondantes n'ont pas été testées.`
+    );
+  }
   if (failed > 0) {
     process.exitCode = 1;
-  } else if (missing > 0) {
+  } else if (missing > 0 && !allowMissing) {
     process.exitCode = 2;
   }
 }
