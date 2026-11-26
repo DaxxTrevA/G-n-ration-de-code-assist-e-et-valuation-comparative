@@ -1,0 +1,45 @@
+{
+  "task": "T18",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T18 - Réessayer une opération asynchrone\r\n\r\nImplémentez `retryAsync(operation, maxAttempts)` dans `submissions/<outil>.js`.\r\nAppelez la fonction asynchrone jusqu'à son succès ou jusqu'à\r\n`maxAttempts` tentatives. Résolvez avec la valeur du premier succès. Si toutes\r\nles tentatives échouent, rejetez avec la dernière erreur. `maxAttempts` doit\r\nêtre un entier positif, sinon lancez une `RangeError`.\r\n\r\nExportez la fonction avec `module.exports = { retryAsync }`.\r\n",
+  "response": "async function retryAsync(operation, maxAttempts) {\n  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {\n    throw new RangeError(\"maxAttempts must be a positive integer\");\n  }\n\n  let lastError;\n  for (let i = 0; i < maxAttempts; i++) {\n    try {\n      return await operation();\n    } catch (err) {\n      lastError = err;\n    }\n  }\n  throw lastError;\n}\n\nmodule.exports = { retryAsync };",
+  "startedAt": "2026-11-26T20:25:06.152Z",
+  "completedAt": "2026-11-26T20:25:07.267Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1113,
+    "exitCode": 0,
+    "output": "PASS tasks/T18/test.js\n  T18 - retryAsync\n    √ resolves when an attempt succeeds (3 ms)\n    √ rejects with the last error when all attempts fail\n    √ rejects a non-positive attempt limit (5 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.535 s\nRan all test suites matching /tasks\\\\T18\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724706152.json",
+    "cases": [
+      {
+        "name": "T18 - retryAsync resolves when an attempt succeeds",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T18 - retryAsync rejects with the last error when all attempts fail",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T18 - retryAsync rejects a non-positive attempt limit",
+        "status": "passed",
+        "durationMs": 5,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

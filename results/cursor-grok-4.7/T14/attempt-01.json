@@ -1,0 +1,45 @@
+{
+  "task": "T14",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T14 - Calculer le total d'un panier\r\n\r\nImplémentez `calculateCartTotal(items, taxRate)` dans `submissions/<outil>.js`.\r\nChaque article contient un prix numérique et une quantité entière. Calculez la\r\nsomme des prix multipliés par les quantités, appliquez le taux de taxe\r\n(`0.2` signifie 20 %), puis arrondissez le total final à deux décimales. Un\r\npanier vide vaut zéro.\r\n\r\nExemple : `calculateCartTotal([{ price: 10, quantity: 2 }], 0.2)` renvoie `24`.\r\n\r\nExportez la fonction avec `module.exports = { calculateCartTotal }`.\r\n",
+  "response": "function calculateCartTotal(items, taxRate) {\n  let subtotal = 0;\n  for (const item of items) {\n    subtotal += item.price * item.quantity;\n  }\n  const total = subtotal * (1 + taxRate);\n  return Math.round((total + Number.EPSILON) * 100) / 100;\n}\n\nmodule.exports = { calculateCartTotal };",
+  "startedAt": "2026-11-26T20:24:14.464Z",
+  "completedAt": "2026-11-26T20:24:15.646Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1181,
+    "exitCode": 0,
+    "output": "PASS tasks/T14/test.js\n  T14 - calculateCartTotal\n    √ applies quantities and tax to a cart (2 ms)\n    √ rounds the final total to cents\n    √ returns zero for an empty cart (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.63 s\nRan all test suites matching /tasks\\\\T14\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724654464.json",
+    "cases": [
+      {
+        "name": "T14 - calculateCartTotal applies quantities and tax to a cart",
+        "status": "passed",
+        "durationMs": 2,
+        "details": ""
+      },
+      {
+        "name": "T14 - calculateCartTotal rounds the final total to cents",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T14 - calculateCartTotal returns zero for an empty cart",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

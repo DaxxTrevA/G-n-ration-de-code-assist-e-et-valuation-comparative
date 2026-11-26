@@ -1,0 +1,45 @@
+{
+  "task": "T09",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T09 - Aplatir un tableau imbriqué\r\n\r\nImplémentez `flattenArray(values)` dans `submissions/<outil>.js`. Aplatissez\r\nrécursivement tous les tableaux imbriqués dans un nouveau tableau. Conservez\r\nl'ordre des valeurs et le tableau d'origine.\r\n\r\nExemple : `flattenArray([1, [2, [3]], 4])` renvoie `[1, 2, 3, 4]`.\r\n\r\nExportez la fonction avec `module.exports = { flattenArray }`.\r\n",
+  "response": "function flattenArray(values) {\n  const result = [];\n  for (const v of values) {\n    if (Array.isArray(v)) result.push(...flattenArray(v));\n    else result.push(v);\n  }\n  return result;\n}\n\nmodule.exports = { flattenArray };",
+  "startedAt": "2026-11-26T20:22:58.568Z",
+  "completedAt": "2026-11-26T20:22:59.654Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1084,
+    "exitCode": 0,
+    "output": "PASS tasks/T09/test.js\n  T09 - flattenArray\n    √ flattens arrays nested at several levels (3 ms)\n    √ handles empty and already flat arrays (1 ms)\n    √ does not mutate the input\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.553 s\nRan all test suites matching /tasks\\\\T09\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724578568.json",
+    "cases": [
+      {
+        "name": "T09 - flattenArray flattens arrays nested at several levels",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T09 - flattenArray handles empty and already flat arrays",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      },
+      {
+        "name": "T09 - flattenArray does not mutate the input",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

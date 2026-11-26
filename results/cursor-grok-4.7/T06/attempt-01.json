@@ -1,0 +1,45 @@
+{
+  "task": "T06",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T06 - Inverser les mots d'une phrase\r\n\r\nImplémentez `reverseWords(text)` dans `submissions/<outil>.js`. La fonction\r\ninverse l'ordre des mots, retire les espaces au début et à la fin, et réduit\r\ntoute suite d'espaces à un seul espace. Une chaîne vide ou composée d'espaces\r\nrenvoie une chaîne vide.\r\n\r\nExemple : `reverseWords(\"  bonjour   tout le monde \")` renvoie\r\n`\"monde le tout bonjour\"`.\r\n\r\nExportez la fonction avec `module.exports = { reverseWords }`.\r\n",
+  "response": "function reverseWords(text) {\n  const words = String(text).trim().split(/\\s+/).filter(Boolean);\n  return words.reverse().join(\" \");\n}\n\nmodule.exports = { reverseWords };",
+  "startedAt": "2026-11-26T20:20:32.216Z",
+  "completedAt": "2026-11-26T20:20:33.308Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1090,
+    "exitCode": 0,
+    "output": "PASS tasks/T06/test.js\n  T06 - reverseWords\n    √ reverses words and normalizes whitespace (3 ms)\n    √ handles a single word and an empty string\n    √ returns an empty string for whitespace-only input (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.542 s\nRan all test suites matching /tasks\\\\T06\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724432216.json",
+    "cases": [
+      {
+        "name": "T06 - reverseWords reverses words and normalizes whitespace",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T06 - reverseWords handles a single word and an empty string",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T06 - reverseWords returns an empty string for whitespace-only input",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

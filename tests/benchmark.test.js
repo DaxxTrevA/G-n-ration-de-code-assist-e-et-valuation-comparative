@@ -6,7 +6,8 @@ const {
   getAttemptContext,
   readAttempts,
   recordAttemptEvaluation,
-  resetBenchmark
+  resetBenchmark,
+  summarizeTestCases
 } = require('../scripts/benchmark');
 const { TOOLS } = require('../scripts/benchmark-config');
 const { appendResult, readResults } = require('../scripts/evaluate');
@@ -46,6 +47,42 @@ describe('benchmark attempt records', () => {
     expect(buildRetryPrompt({
       testResults: [{ assertionResults: [], failureMessage: '' }]
     }, 'Jest: No tests found')).toBe('Jest: No tests found');
+  });
+
+  test('summarizes each Jest case with status, duration, and failure details', () => {
+    expect(summarizeTestCases({
+      testResults: [{
+        name: 'tasks/T01/test.js',
+        failureMessage: '',
+        assertionResults: [
+          {
+            fullName: 'T01 capitalizes the first character',
+            status: 'passed',
+            duration: 2,
+            failureMessages: []
+          },
+          {
+            fullName: 'T01 preserves empty strings',
+            status: 'failed',
+            duration: 1,
+            failureMessages: ['Expected: ""\nReceived: undefined']
+          }
+        ]
+      }]
+    })).toEqual([
+      {
+        name: 'T01 capitalizes the first character',
+        status: 'passed',
+        durationMs: 2,
+        details: ''
+      },
+      {
+        name: 'T01 preserves empty strings',
+        status: 'failed',
+        durationMs: 1,
+        details: 'Expected: ""\nReceived: undefined'
+      }
+    ]);
   });
 
   test('uses only the prior test error on a retry and stops after success', () => {

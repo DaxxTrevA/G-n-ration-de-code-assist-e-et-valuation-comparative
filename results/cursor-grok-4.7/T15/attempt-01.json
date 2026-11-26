@@ -1,0 +1,45 @@
+{
+  "task": "T15",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T15 - Paginer une liste\r\n\r\nImplémentez `paginate(items, page, pageSize)` dans `submissions/<outil>.js`.\r\nLes pages commencent à 1. Retournez `{ items, total, page, pageSize,\r\ntotalPages }`, où `items` contient uniquement la page demandée et\r\n`totalPages` vaut zéro pour une liste vide. `page` et `pageSize` doivent être\r\ndes entiers positifs, sinon lancez une `RangeError`. Ne modifiez pas la liste.\r\n\r\nExportez la fonction avec `module.exports = { paginate }`.\r\n",
+  "response": "function paginate(items, page, pageSize) {\n  if (!Number.isInteger(page) || page < 1) {\n    throw new RangeError(\"page must be a positive integer\");\n  }\n  if (!Number.isInteger(pageSize) || pageSize < 1) {\n    throw new RangeError(\"pageSize must be a positive integer\");\n  }\n\n  const total = items.length;\n  const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);\n  const start = (page - 1) * pageSize;\n\n  return {\n    items: items.slice(start, start + pageSize),\n    total,\n    page,\n    pageSize,\n    totalPages,\n  };\n}\n\nmodule.exports = { paginate };",
+  "startedAt": "2026-11-26T20:24:37.920Z",
+  "completedAt": "2026-11-26T20:24:39.142Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1221,
+    "exitCode": 0,
+    "output": "PASS tasks/T15/test.js\n  T15 - paginate\n    √ returns the requested page and pagination metadata (4 ms)\n    √ handles an empty list and a final partial page\n    √ rejects invalid page numbers and sizes (8 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.629 s\nRan all test suites matching /tasks\\\\T15\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724677920.json",
+    "cases": [
+      {
+        "name": "T15 - paginate returns the requested page and pagination metadata",
+        "status": "passed",
+        "durationMs": 4,
+        "details": ""
+      },
+      {
+        "name": "T15 - paginate handles an empty list and a final partial page",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T15 - paginate rejects invalid page numbers and sizes",
+        "status": "passed",
+        "durationMs": 8,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

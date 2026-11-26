@@ -65,6 +65,7 @@ function runTaskTests(task, tool) {
   } else {
     delete env.P27_TOOL;
   }
+  const startedAt = Date.now();
   const result = spawnSync(
     process.execPath,
     [
@@ -76,6 +77,7 @@ function runTaskTests(task, tool) {
     ],
     { cwd: ROOT, encoding: 'utf8', env }
   );
+  const durationMs = Date.now() - startedAt;
   if (result.stdout) {
     stdout.write(result.stdout);
   }
@@ -102,6 +104,7 @@ function runTaskTests(task, tool) {
     report,
     exitCode: result.status ?? 1,
     output: [result.stdout, result.stderr].filter(Boolean).join('\n').trim(),
+    durationMs,
     submissionExists: tool
       ? fs.existsSync(path.join(taskDirectory, 'submissions', `${TOOLS[tool].file}.js`))
       : fs.existsSync(path.join(taskDirectory, 'submission.js'))

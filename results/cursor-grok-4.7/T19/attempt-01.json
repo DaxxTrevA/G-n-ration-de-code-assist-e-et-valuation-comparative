@@ -1,0 +1,45 @@
+{
+  "task": "T19",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T19 - Trier des objets par champ\r\n\r\nImplémentez `sortByField(items, field)` dans `submissions/<outil>.js`. Retournez\r\nun nouveau tableau trié par ordre croissant selon la valeur de `field`.\r\nComparez les nombres numériquement et les chaînes avec\r\n`localeCompare`. Pour des valeurs égales, conservez l'ordre d'origine. Ne\r\nmodifiez pas le tableau d'entrée.\r\n\r\nExportez la fonction avec `module.exports = { sortByField }`.\r\n",
+  "response": "function sortByField(items, field) {\n  return items.slice().sort((a, b) => {\n    const va = a[field];\n    const vb = b[field];\n    if (typeof va === \"number\" && typeof vb === \"number\") {\n      return va - vb;\n    }\n    return String(va).localeCompare(String(vb));\n  });\n}\n\nmodule.exports = { sortByField };",
+  "startedAt": "2026-11-26T20:25:13.638Z",
+  "completedAt": "2026-11-26T20:25:14.777Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1138,
+    "exitCode": 0,
+    "output": "PASS tasks/T19/test.js\n  T19 - sortByField\n    √ sorts numeric and string fields in ascending order (18 ms)\n    √ preserves the original order of equal values\n    √ does not mutate the input (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.579 s\nRan all test suites matching /tasks\\\\T19\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724713638.json",
+    "cases": [
+      {
+        "name": "T19 - sortByField sorts numeric and string fields in ascending order",
+        "status": "passed",
+        "durationMs": 18,
+        "details": ""
+      },
+      {
+        "name": "T19 - sortByField preserves the original order of equal values",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T19 - sortByField does not mutate the input",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

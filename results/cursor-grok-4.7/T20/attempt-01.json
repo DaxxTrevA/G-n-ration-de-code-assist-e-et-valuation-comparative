@@ -1,0 +1,45 @@
+{
+  "task": "T20",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T20 - Analyser une ligne CSV simple\r\n\r\nImplémentez `parseCsvLine(line)` dans `submissions/<outil>.js`. Analysez une\r\nligne de CSV dont le séparateur est `;`. Un champ peut être entouré de guillemets\r\net contenir des séparateurs ou des guillemets doublés (`\"\"`). Une ligne vide\r\ncorrespond à un champ vide. Une ligne avec un guillemet non fermé lève une\r\n`SyntaxError`. Les retours à la ligne ne sont pas inclus dans une ligne.\r\n\r\nExemple : `parseCsvLine('T01;\"Copilot; agent\";\"a \"\"quote\"\" \"')` renvoie\r\n`['T01', 'Copilot; agent', 'a \"quote\" ']`.\r\n\r\nExportez la fonction avec `module.exports = { parseCsvLine }`.\r\n",
+  "response": "function parseCsvLine(line) {\n  const fields = [];\n  let current = \"\";\n  let inQuotes = false;\n\n  for (let i = 0; i < line.length; i++) {\n    const c = line[i];\n\n    if (inQuotes) {\n      if (c === '\"') {\n        if (line[i + 1] === '\"') {\n          current += '\"';\n          i++;\n        } else {\n          inQuotes = false;\n        }\n      } else {\n        current += c;\n      }\n      continue;\n    }\n\n    if (c === '\"') {\n      inQuotes = true;\n      continue;\n    }\n\n    if (c === \";\") {\n      fields.push(current);\n      current = \"\";\n      continue;\n    }\n\n    current += c;\n  }\n\n  if (inQuotes) {\n    throw new SyntaxError(\"Unterminated quoted field\");\n  }\n\n  fields.push(current);\n  return fields;\n}\n\nmodule.exports = { parseCsvLine };",
+  "startedAt": "2026-11-26T20:25:24.673Z",
+  "completedAt": "2026-11-26T20:25:25.758Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1083,
+    "exitCode": 0,
+    "output": "PASS tasks/T20/test.js\n  T20 - parseCsvLine\n    √ splits simple semicolon-separated fields (3 ms)\n    √ supports separators and doubled quotes inside quoted fields\n    √ handles an empty field and rejects an unclosed quoted field (6 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.544 s\nRan all test suites matching /tasks\\\\T20\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724724673.json",
+    "cases": [
+      {
+        "name": "T20 - parseCsvLine splits simple semicolon-separated fields",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T20 - parseCsvLine supports separators and doubled quotes inside quoted fields",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T20 - parseCsvLine handles an empty field and rejects an unclosed quoted field",
+        "status": "passed",
+        "durationMs": 6,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

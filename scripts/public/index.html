@@ -107,6 +107,33 @@
 
           <section id="test-result" class="test-result" aria-live="polite" hidden></section>
 
+          <section id="execution-panel" class="execution-panel" aria-live="polite" hidden>
+            <div class="detail-heading">
+              <div>
+                <p class="eyebrow">JOURNAL D’EXÉCUTION</p>
+                <h3>Console des tests</h3>
+              </div>
+              <span id="execution-meta" class="execution-meta"></span>
+            </div>
+            <pre id="execution-output" class="terminal-output"></pre>
+          </section>
+
+          <section id="test-cases-panel" class="test-cases-panel" hidden>
+            <div class="detail-heading">
+              <div>
+                <p class="eyebrow">DÉTAIL EN DIRECT</p>
+                <h3>Cas vérifiés et résultats</h3>
+              </div>
+            </div>
+            <p class="detail-hint">En cas d’échec, le détail Jest affiche les valeurs attendue et reçue lorsqu’elles sont disponibles.</p>
+            <div class="table-wrap">
+              <table class="test-cases-table">
+                <thead><tr><th>Comportement vérifié</th><th>Résultat</th><th>Durée (ms)</th><th>Détail Jest / écart</th></tr></thead>
+                <tbody id="test-cases-body"></tbody>
+              </table>
+            </div>
+          </section>
+
           <section id="retry-prompt" class="prompt-panel retry-panel" hidden>
             <div class="prompt-heading">
               <div>

@@ -44,6 +44,27 @@ function buildRetryPrompt(report, testOutput = '') {
   return failures.join('\n\n').trim() || testOutput.trim();
 }
 
+function summarizeTestCases(report) {
+  return report.testResults.flatMap((suite) => {
+    const assertions = suite.assertionResults || [];
+    if (assertions.length === 0 && suite.failureMessage) {
+      return [{
+        name: suite.name,
+        status: 'failed',
+        durationMs: null,
+        details: suite.failureMessage
+      }];
+    }
+
+    return assertions.map((assertion) => ({
+      name: assertion.fullName,
+      status: assertion.status,
+      durationMs: Number.isFinite(assertion.duration) ? assertion.duration : null,
+      details: (assertion.failureMessages || []).join('\n')
+    }));
+  });
+}
+
 function getAttemptContext(root, task, tool) {
   const taskDirectory = getTaskDirectory(root, task);
   const attempts = readAttempts(root, task, tool);
@@ -100,6 +121,7 @@ function runAndRecordAttempt({ root, task, tool, code, modelVersion }) {
   const testResult = runTaskTests(task, tool);
   const report = testResult.report;
   const retryPrompt = buildRetryPrompt(report, testResult.output);
+  const testCases = summarizeTestCases(report);
   const failures = report.testResults.flatMap((suite) => suite.assertionResults
     .filter((assertion) => assertion.status === 'failed')
     .map((assertion) => ({
@@ -125,6 +147,12 @@ function runAndRecordAttempt({ root, task, tool, code, modelVersion }) {
       total: report.numTotalTests,
       failed: report.numFailedTests,
       skipped: report.numPendingTests
+    },
+    testRun: {
+      durationMs: testResult.durationMs,
+      exitCode: testResult.exitCode,
+      output: testResult.output,
+      cases: testCases
     },
     failures,
     retryPrompt: passed ? '' : retryPrompt,
@@ -250,5 +278,6 @@ module.exports = {
   readAttempts,
   recordAttemptEvaluation,
   resetBenchmark,
-  runAndRecordAttempt
+  runAndRecordAttempt,
+  summarizeTestCases
 };

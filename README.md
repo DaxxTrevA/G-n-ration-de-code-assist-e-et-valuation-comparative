@@ -52,6 +52,9 @@ les évaluations humaines. Les résultats s'ajoutent à `results/results.csv`.
    **Enregistrer et lancer les tests**.
 7. Saisissez les notes de la grille et le temps écoulé après chaque tentative.
    En cas d'échec, copiez le message d'erreur affiché pour la tentative suivante.
+   Le journal affiche la sortie de Jest et sa durée; le tableau détaille les cas
+   réussis ou échoués. « 3/3 cas de test » désigne les vérifications de l'exercice,
+   tandis que « Essai 1 sur 3 » désigne le premier envoi de code à l'outil.
 8. Ouvrez **Comparaison** pour voir les 20 tâches. Le pourcentage de chaque
    outil est la moyenne de ses cinq notes lors de sa dernière tentative évaluée.
    Le meilleur outil apparaît seulement quand les trois ont des résultats.

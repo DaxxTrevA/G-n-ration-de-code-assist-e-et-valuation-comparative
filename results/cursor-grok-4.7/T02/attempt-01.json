@@ -1,0 +1,45 @@
+{
+  "task": "T02",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T02 - Vérifier un palindrome\r\n\r\nImplémentez `isPalindrome(text)` dans le fichier de l'assistant, par exemple\r\n`submissions/copilot.js`. La fonction renvoie\r\n`true` si le texte se lit de la même façon dans les deux sens, sans tenir compte\r\ndes majuscules, des espaces ni de la ponctuation. Les caractères accentués\r\nrestent distincts de leurs variantes non accentuées. Une chaîne vide est un\r\npalindrome.\r\n\r\nExemples : `isPalindrome(\"Esope reste ici et se repose\")` renvoie `true` et\r\n`isPalindrome(\"bonjour\")` renvoie `false`.\r\n\r\nExportez la fonction avec `module.exports = { isPalindrome }`.\r\n",
+  "response": "function isPalindrome(text) {\n  const normalized = text.toLowerCase().replace(/[^\\p{L}\\p{N}]/gu, '');\n  const reversed = [...normalized].reverse().join('');\n  return normalized === reversed;\n}\n\nmodule.exports = { isPalindrome };",
+  "startedAt": "2026-11-26T20:03:38.405Z",
+  "completedAt": "2026-11-26T20:03:39.687Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1280,
+    "exitCode": 0,
+    "output": "PASS tasks/T02/test.js\n  T02 - isPalindrome\n    √ recognizes simple palindromes regardless of case (3 ms)\n    √ ignores spaces and punctuation\n    √ rejects a non-palindrome and accepts an empty string (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.596 s, estimated 1 s\nRan all test suites matching /tasks\\\\T02\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795723418406.json",
+    "cases": [
+      {
+        "name": "T02 - isPalindrome recognizes simple palindromes regardless of case",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T02 - isPalindrome ignores spaces and punctuation",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      },
+      {
+        "name": "T02 - isPalindrome rejects a non-palindrome and accepts an empty string",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

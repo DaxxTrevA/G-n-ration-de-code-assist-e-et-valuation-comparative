@@ -1,0 +1,45 @@
+{
+  "task": "T12",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T12 - Construire une requête SQL paramétrée\r\n\r\nImplémentez `buildUserQuery(filters)` dans `submissions/<outil>.js`. Autorisez\r\nuniquement les filtres `name`, `role` et `active`, dans cet ordre fixe. Retournez\r\n`{ sql, params }` pour `SELECT * FROM users`, avec une clause `WHERE` utilisant\r\ndes placeholders `$1`, `$2`, etc. Les valeurs sont exclusivement dans `params`,\r\njamais concaténées dans la requête. Ignorez les clés inconnues.\r\n\r\nExemple : `{ name: \"Ada\", active: true }` produit `SELECT * FROM users WHERE\r\nname = $1 AND active = $2` et `[\"Ada\", true]`.\r\n\r\nExportez la fonction avec `module.exports = { buildUserQuery }`.\r\n",
+  "response": "function buildUserQuery(filters) {\n  const allowed = [\"name\", \"role\", \"active\"];\n  const clauses = [];\n  const params = [];\n  const source = filters && typeof filters === \"object\" ? filters : {};\n\n  for (const key of allowed) {\n    if (Object.prototype.hasOwnProperty.call(source, key)) {\n      params.push(source[key]);\n      clauses.push(`${key} = $${params.length}`);\n    }\n  }\n\n  const sql =\n    clauses.length === 0\n      ? \"SELECT * FROM users\"\n      : `SELECT * FROM users WHERE ${clauses.join(\" AND \")}`;\n\n  return { sql, params };\n}\n\nmodule.exports = { buildUserQuery };",
+  "startedAt": "2026-11-26T20:23:56.601Z",
+  "completedAt": "2026-11-26T20:23:57.644Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1041,
+    "exitCode": 0,
+    "output": "PASS tasks/T12/test.js\n  T12 - buildUserQuery\n    √ uses parameter placeholders in a fixed, documented order (3 ms)\n    √ returns a plain select when there are no supported filters (1 ms)\n    √ never inserts filter values into SQL, including injection-like input (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.509 s, estimated 1 s\nRan all test suites matching /tasks\\\\T12\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724636601.json",
+    "cases": [
+      {
+        "name": "T12 - buildUserQuery uses parameter placeholders in a fixed, documented order",
+        "status": "passed",
+        "durationMs": 3,
+        "details": ""
+      },
+      {
+        "name": "T12 - buildUserQuery returns a plain select when there are no supported filters",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      },
+      {
+        "name": "T12 - buildUserQuery never inserts filter values into SQL, including injection-like input",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

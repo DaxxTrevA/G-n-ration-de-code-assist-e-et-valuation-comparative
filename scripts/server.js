@@ -171,6 +171,7 @@ async function handleApi(request, response, url) {
       total: result.attempt.testSummary.total,
       failed: result.attempt.testSummary.failed,
       skipped: result.attempt.testSummary.skipped,
+      testRun: result.attempt.testRun,
       failures: result.failures,
       success: result.attempt.status === 'Réussi',
       nextPrompt: result.attempt.retryPrompt,

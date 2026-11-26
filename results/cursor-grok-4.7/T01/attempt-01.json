@@ -1,0 +1,45 @@
+{
+  "task": "T01",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T01 - Mettre en majuscule la première lettre\r\n\r\nImplémentez `capitalize(text)` dans le fichier de l'assistant, par exemple\r\n`submissions/copilot.js`. La fonction reçoit une\r\nchaîne et renvoie la même chaîne avec uniquement son premier caractère mis en\r\nmajuscule. Le reste de la chaîne ne doit pas être modifié. Une chaîne vide\r\ndoit rester vide.\r\n\r\nExemples : `capitalize(\"bonjour\")` renvoie `\"Bonjour\"` et\r\n`capitalize(\"hELLO\")` renvoie `\"HELLO\"`.\r\n\r\nExportez la fonction avec `module.exports = { capitalize }`.\r\n",
+  "response": "function capitalize(text) {\n  if (text.length === 0) {\n    return '';\n  }\n  return text[0].toUpperCase() + text.slice(1);\n}\n\nmodule.exports = { capitalize };",
+  "startedAt": "2026-11-26T20:01:20.008Z",
+  "completedAt": "2026-11-26T20:01:21.209Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1197,
+    "exitCode": 0,
+    "output": "PASS tasks/T01/test.js\n  T01 - capitalize\n    √ capitalizes the first character and preserves the rest (2 ms)\n    √ supports an empty string (1 ms)\n    √ does not change a string that starts with a digit\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.458 s, estimated 1 s\nRan all test suites matching /tasks\\\\T01\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795723280009.json",
+    "cases": [
+      {
+        "name": "T01 - capitalize capitalizes the first character and preserves the rest",
+        "status": "passed",
+        "durationMs": 2,
+        "details": ""
+      },
+      {
+        "name": "T01 - capitalize supports an empty string",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      },
+      {
+        "name": "T01 - capitalize does not change a string that starts with a digit",
+        "status": "passed",
+        "durationMs": 0,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}

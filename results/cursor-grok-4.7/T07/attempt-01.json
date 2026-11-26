@@ -1,0 +1,45 @@
+{
+  "task": "T07",
+  "tool": "Cursor (Grok 4.7)",
+  "modelVersion": "Grok 4.7",
+  "attemptNumber": 1,
+  "prompt": "# T07 - Compter les occurrences\r\n\r\nImplémentez `countOccurrences(values, target)` dans `submissions/<outil>.js`.\r\nLa fonction compte les éléments égaux à `target` avec l'égalité stricte (`===`).\r\nElle ne modifie pas le tableau reçu.\r\n\r\nExemple : `countOccurrences([\"a\", \"b\", \"a\"], \"a\")` renvoie `2`.\r\n\r\nExportez la fonction avec `module.exports = { countOccurrences }`.\r\n",
+  "response": "function countOccurrences(values, target) {\n  let count = 0;\n  for (const v of values) {\n    if (v === target) count++;\n  }\n  return count;\n}\n\nmodule.exports = { countOccurrences };",
+  "startedAt": "2026-11-26T20:20:46.491Z",
+  "completedAt": "2026-11-26T20:20:47.547Z",
+  "status": "Réussi",
+  "testSummary": {
+    "passed": 3,
+    "total": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testRun": {
+    "durationMs": 1055,
+    "exitCode": 0,
+    "output": "PASS tasks/T07/test.js\n  T07 - countOccurrences\n    √ counts strict matches (2 ms)\n    √ returns zero for no matches and for an empty array (1 ms)\n    √ does not mutate the input (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       3 passed, 3 total\nSnapshots:   0 total\nTime:        0.524 s\nRan all test suites matching /tasks\\\\T07\\\\test.js/i.\nTest results written to: ..\\..\\..\\..\\AppData\\Local\\Temp\\p27-jest-28576-1795724446491.json",
+    "cases": [
+      {
+        "name": "T07 - countOccurrences counts strict matches",
+        "status": "passed",
+        "durationMs": 2,
+        "details": ""
+      },
+      {
+        "name": "T07 - countOccurrences returns zero for no matches and for an empty array",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      },
+      {
+        "name": "T07 - countOccurrences does not mutate the input",
+        "status": "passed",
+        "durationMs": 1,
+        "details": ""
+      }
+    ]
+  },
+  "failures": [],
+  "retryPrompt": "",
+  "evaluation": null
+}
